@@ -39,7 +39,7 @@ ret_Rf = pd.read_csv(
     parse_dates=['Trddt'],
     index_col='Trddt')
 
-# %%
+# %% read announce date data frame.
 annodt_df = pd.read_csv(
     '/Users/caoyue/Codes/R/Paper_test/Data/rawData/IAR_Rept.csv',
     sep='\t',
@@ -65,8 +65,15 @@ for index, file in enumerate(file_list):
     else:
         turnOver_df = turnOver_df.append(temp_df)
 
-# %%
-annodt_df.drop_duplicates(['Stkcd', 'Annodt']).shape
 
 # %% look up data frame shape.
 [x.shape for x in [ret_df, ret_market, ret_Rf, annodt_df, turnOver_df]]
+
+# %% store the readed data frames.
+store = pd.HDFStore('data/raw_data.h5')
+store['ret_df'] = ret_df
+store['ret_market'] = ret_market
+store['ret_Rf'] = ret_Rf
+store['annodt_df'] = annodt_df
+store['turnOver_df'] = turnOver_df
+store.close()
