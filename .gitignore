@@ -2,3 +2,4 @@
 .vscode/
 notebook_env.db
 data/raw_data.h5
+.DS_Store
