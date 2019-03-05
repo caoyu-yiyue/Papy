@@ -13,7 +13,7 @@ for index, file in enumerate(file_list):
         sep='\t',
         encoding='utf-16le',
         parse_dates=['Trddt'],
-        index_col=['Trddt', 'Stkcd'])
+        index_col=['Stkcd', 'Trddt'])
     if index == 0:
         ret_df = temp_df
     else:
