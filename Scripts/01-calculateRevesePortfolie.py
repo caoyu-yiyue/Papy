@@ -27,6 +27,19 @@ ret_df_without_annodt = ret_df_grouped.apply(
     lambda df: df.query('Trddt not in Annodt and Trddt not in Annodt_lag'))
 
 # 通过reset_index() 来去掉分组。同时删掉不需要的宣发日期列。
-ret_df_final = ret_df_without_annodt.reset_index(
+ret_df_final: pd.DataFrame = ret_df_without_annodt.reset_index(
     level=0, drop=True).drop(
         labels=['Annodt', 'Annodt_lag'], axis=1)
+
+# %%
+# add a column for normalized return
+ret_df_grouped = ret_df_final.groupby(level='Stkcd')
+
+# %% 计算标准化收益率
+normalied_df: pd.Series = ret_df_grouped['Dretwd'].rolling(window=60).apply(
+    lambda window: (window[59] - window.mean()) / window.std())
+
+# %% 标准化收益率合并到原数据
+normalied_df.reset_index(level=0, drop=True, inplace=True)
+ret_df_final['Norm_ret'] = normalied_df
+ret_df_final.dropna(subset=['Norm_ret'], inplace=True)
