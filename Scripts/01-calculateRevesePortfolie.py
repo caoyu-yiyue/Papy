@@ -43,3 +43,11 @@ normalied_df: pd.Series = ret_df_grouped['Dretwd'].rolling(window=60).apply(
 normalied_df.reset_index(level=0, drop=True, inplace=True)
 ret_df_final['Norm_ret'] = normalied_df
 ret_df_final.dropna(subset=['Norm_ret'], inplace=True)
+
+# %% group by cap
+ret_df_grouped = ret_df_final.groupby(
+    'Trddt', as_index=False, group_keys=False)
+ret_df_final['cap_group'] = ret_df_grouped['Dsmvosd'].apply(lambda series: pd.qcut(series, q=5, labels=['Small', '2', '3', '4', 'Big'])).reset_index(level=0, drop=True)
+
+# %% group by normalize return
+ret_df_final['ret_group'] = ret_df_grouped['Norm_ret'].apply(lambda series: pd.qcut(series, q=10, labels=['Lo', '2', '3', '4', '5', '6', '7', '8', '9', 'Hi'])).reset_index(level=0, drop=True)
