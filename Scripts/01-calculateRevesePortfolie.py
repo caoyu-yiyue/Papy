@@ -47,7 +47,43 @@ ret_df_final.dropna(subset=['Norm_ret'], inplace=True)
 # %% group by cap
 ret_df_grouped = ret_df_final.groupby(
     'Trddt', as_index=False, group_keys=False)
-ret_df_final['cap_group'] = ret_df_grouped['Dsmvosd'].apply(lambda series: pd.qcut(series, q=5, labels=['Small', '2', '3', '4', 'Big'])).reset_index(level=0, drop=True)
+ret_df_final['cap_group'] = ret_df_grouped['Dsmvosd'].apply(
+    lambda series: pd.qcut(series, q=5, labels=['Small', '2', '3', '4', 'Big'])
+        ).reset_index(level=0, drop=True)
 
 # %% group by normalize return
-ret_df_final['ret_group'] = ret_df_grouped['Norm_ret'].apply(lambda series: pd.qcut(series, q=10, labels=['Lo', '2', '3', '4', '5', '6', '7', '8', '9', 'Hi'])).reset_index(level=0, drop=True)
+ret_df_final['ret_group'] = ret_df_grouped['Norm_ret'].apply(
+    lambda series: pd.qcut(
+        series, q=10,
+        labels=['Lo', '2', '3', '4', '5', '6', '7', '8', '9', 'Hi'])
+            ).reset_index(level=0, drop=True)
+
+
+# %% a function for calculate the cumulative return.
+def cumulative_ret(data_serie: pd.Series):
+    '''
+    data_serie: array like nums
+    输入一列数字，计算累积收益率。如：
+    输入[0.4, 0.3, 0.2]，返回（1 * 1.2 * 1.3 * 1.4 - 1）
+    '''
+    cumul_ret = 1
+    for num in data_serie:
+        cumul_ret = (1 + num) * cumul_ret
+    return (cumul_ret - 1)
+
+
+# cumulative_ret([0.4, 0.3, 0.2, 0.1])
+
+# %% calculate cumulative return for each stock.
+# 将时间倒序，解决下一步rolling 对象没有向前rolling 的问题。
+ret_df_grouped = ret_df_final.groupby('Stkcd')
+tem = ret_df_grouped['Dretwd'].apply(
+    lambda serie: serie.sort_index(level='Trddt', ascending=False).shift(1)
+).reset_index(
+    level=0, drop=True)
+
+# 将上面倒叙过后的数据框，使用cumulative_ret 函数计算未来五天的累积收益率。最后把顺序转回来
+ret_df_final['cum_ret'] = tem.groupby('Stkcd').rolling(5).apply(
+    cumulative_ret).reset_index(
+        level=0, drop=True).sort_index(level=['Stkcd', 'Trddt'])
+ret_df_final.dropna(subset=['cum_ret'], inplace=True)
