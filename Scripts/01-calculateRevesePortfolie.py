@@ -3,6 +3,7 @@
 # %% import modules.
 import pandas as pd
 import datetime
+import numpy as np
 
 # %% read the HDF5 files
 store = pd.HDFStore('data/raw_data.h5')
@@ -87,3 +88,24 @@ ret_df_final['cum_ret'] = tem.groupby('Stkcd').rolling(5).apply(
     cumulative_ret).reset_index(
         level=0, drop=True).sort_index(level=['Stkcd', 'Trddt'])
 ret_df_final.dropna(subset=['cum_ret'], inplace=True)
+
+# %% portfolie return for every day, cap_group and ret_group
+# 计算每组的组合权重dollar_volumn
+ret_df_grouped = ret_df_final.groupby('Stkcd')
+ret_df_final['dollar_volumn'] = ret_df_grouped.apply(
+    lambda df: df['Clsprc'].shift() * df['Dnshrtrd']).reset_index(
+        level=0, drop=True)
+ret_df_final.dropna(subset=['dollar_volumn'], inplace=True)
+
+# %%
+# 计算每组按照dollar_volumn 加权得到的组合收益率
+ret_df_grouped = ret_df_final.groupby(['Trddt', 'cap_group', 'ret_group'])
+portfolie_ret_df = ret_df_grouped.apply(
+    lambda df: np.average(df['cum_ret'], weights=df['dollar_volumn']))
+
+# %%
+# 试用agg 函数。性能表现不好暂时放在这里。
+# ret_df_grouped.agg({
+#     'cum_ret':
+#     lambda x: np.average(x, weights=ret_df_grouped['dollar_volumn'])
+# })
