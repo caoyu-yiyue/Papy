@@ -35,23 +35,22 @@ ret_df_final: pd.DataFrame = ret_df_without_annodt.reset_index(
 #############################################################################
 # add some column for future use
 
-# %% add a column for normalized return
-ret_df_grouped = ret_df_final.groupby(level='Stkcd')
-
-# 计算标准化收益率
-normalied_df: pd.Series = ret_df_grouped['Dretwd'].rolling(window=60).apply(
-    lambda window: (window[59] - window.mean()) / window.std())
-
-# 标准化收益率合并到原数据
-normalied_df.reset_index(level=0, drop=True, inplace=True)
-ret_df_final['Norm_ret'] = normalied_df
-
 # %% add a column for dollar_volumn
 # 计算每组的组合权重dollar_volumn
 ret_df_grouped = ret_df_final.groupby('Stkcd')
 ret_df_final['dollar_volumn'] = ret_df_grouped.apply(
     lambda df: df['Clsprc'].shift() * df['Dnshrtrd']).reset_index(
         level=0, drop=True)
+
+# %% add a column for normalized return
+ret_df_grouped = ret_df_final.groupby(level='Stkcd')
+# 计算标准化收益率
+normalied_df: pd.Series = ret_df_grouped['Dretwd'].rolling(window=60).apply(
+    lambda window: (window[59] - window.mean()) / window.std())
+# 标准化收益率合并到原数据
+normalied_df.reset_index(level=0, drop=True, inplace=True)
+ret_df_final['Norm_ret'] = normalied_df
+
 # 在最后清理空值，防止因为两列空值重叠时多删数据。
 ret_df_final.dropna(subset=['Norm_ret', 'dollar_volumn'], inplace=True)
 
