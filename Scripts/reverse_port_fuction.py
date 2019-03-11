@@ -116,5 +116,5 @@ def creat_group_signs(df: pd.Series, column_to_cut: str, groupby_column: str,
         各组的标识名。长度需要等于quntiles
     """
     grouped_df = df.loc[:, column_to_cut].groupby(groupby_column)
-    return grouped_df.apply(
+    return grouped_df.transform(
         lambda serie: pd.qcut(serie, q=quntiles, labels=labels))
