@@ -7,7 +7,7 @@ import numpy as np
 
 # %%
 # window length for backward and forward
-backward_window = 60
+backward_window = 20
 forward_window = 5
 
 # %% read the HDF5 files
@@ -47,10 +47,15 @@ ret_df_final['dollar_volumn'] = ret_df_grouped.apply(
     lambda df: df['Clsprc'].shift() * df['Dnshrtrd']).reset_index(
         level=0, drop=True)
 
+# %% add a column for log return
+ret_df_grouped = ret_df_final.groupby('Stkcd', group_keys=False)
+ret_df_final['log_ret'] = ret_df_grouped.apply(
+    lambda df: np.log1p(df['Dretwd']))
+
 # %% add a column for normalized return
 ret_df_grouped = ret_df_final.groupby(level='Stkcd')
 # 计算标准化收益率
-normalied_df: pd.Series = ret_df_grouped['Dretwd'].rolling(
+normalied_df: pd.Series = ret_df_grouped['log_ret'].rolling(
     window=backward_window).apply(
         lambda window: (window[-1] - window.mean()) / window.std())
 # 标准化收益率合并到原数据
