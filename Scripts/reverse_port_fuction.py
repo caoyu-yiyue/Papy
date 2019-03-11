@@ -5,7 +5,7 @@ import pandas as pd
 # function for normalized return in past rolling window.
 def normalize_ret_rolling_past(df: pd.DataFrame,
                                window: int,
-                               ret_column: str = 'Dretwd',
+                               ret_column: str = 'log_ret',
                                groupby_column: str = 'Stkcd'):
     """
     传入一个pandas.DataFrame 对象，对其中的一列收益率以过去的window 区间为窗口做滚动标准化。
