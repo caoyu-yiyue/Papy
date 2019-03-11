@@ -53,7 +53,7 @@ def cumulative_ret_rolling_forward(df: pd.DataFrame,
                                    window: int,
                                    ret_column: str = 'Dretwd',
                                    groupby_column: str = 'Stkcd',
-                                   shift: int = 1):
+                                   shift: int = 2):
     """
     计算pd.DataFrame 对象某一列，针对长度为window 的窗口期内滚动的累积收益率。
 
@@ -72,8 +72,9 @@ def cumulative_ret_rolling_forward(df: pd.DataFrame,
         str 'Stkcd' Default
         用于将数据分组的列名。默认为'Stkcd'，即股票代码
     shift:
-        int 1 Default
+        int 2 Default
         位移参数，确定每个时间点，从何时开始累积收益率区间。若shift=0, 从本期开始；shift=1，从下一期开始。
+        默认为2，因为项目中在t 期排序，(t + 1) 期开始持有，那么(t + 2) 期的收益率是从第(t + 1) 期持有所得。
 
     Returns:
     --------
