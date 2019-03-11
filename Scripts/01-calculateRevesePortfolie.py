@@ -102,7 +102,7 @@ def cumulative_ret(data_serie: pd.Series):
 # 将时间倒序，解决下一步rolling 对象没有向前rolling 的问题。
 ret_df_grouped = ret_df_final.groupby('Stkcd')
 tem = ret_df_grouped['Dretwd'].apply(
-    lambda serie: serie.sort_index(level='Trddt', ascending=False).shift(1)
+    lambda serie: serie.sort_index(level='Trddt', ascending=False).shift(2)
 ).reset_index(
     level=0, drop=True)
 
@@ -161,8 +161,8 @@ reverse_ret_aver.set_index(
 reverse_ret_aver.sort_index()
 
 # %%
-store = pd.HDFStore('data/reverse_portfolie.h5')
-key = 'reverse' + str(backward_window) + '_' + str(forward_window)
-store[key] = reverse_ret_aver
-# store.get('reverse20_5')
-store.close()
+# store = pd.HDFStore('data/reverse_portfolie.h5')
+# key = 'reverse' + str(backward_window) + '_' + str(forward_window)
+# store[key] = reverse_ret_aver
+# # store.get('reverse20_5')
+# store.close()
