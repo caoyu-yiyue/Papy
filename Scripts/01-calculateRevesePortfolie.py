@@ -5,6 +5,11 @@ import pandas as pd
 import datetime
 import numpy as np
 
+# %%
+# window length for backward and forward
+backward_window = 60
+forward_window = 5
+
 # %% read the HDF5 files
 store = pd.HDFStore('data/raw_data.h5')
 ret_df: pd.DataFrame = store.get('ret_df').sort_index()
@@ -45,8 +50,9 @@ ret_df_final['dollar_volumn'] = ret_df_grouped.apply(
 # %% add a column for normalized return
 ret_df_grouped = ret_df_final.groupby(level='Stkcd')
 # 计算标准化收益率
-normalied_df: pd.Series = ret_df_grouped['Dretwd'].rolling(window=60).apply(
-    lambda window: (window[59] - window.mean()) / window.std())
+normalied_df: pd.Series = ret_df_grouped['Dretwd'].rolling(
+    window=backward_window).apply(
+        lambda window: (window[-1] - window.mean()) / window.std())
 # 标准化收益率合并到原数据
 normalied_df.reset_index(level=0, drop=True, inplace=True)
 ret_df_final['Norm_ret'] = normalied_df
@@ -96,7 +102,7 @@ tem = ret_df_grouped['Dretwd'].apply(
     level=0, drop=True)
 
 # 将上面倒叙过后的数据框，使用cumulative_ret 函数计算未来五天的累积收益率。最后把顺序转回来
-ret_df_final['cum_ret'] = tem.groupby('Stkcd').rolling(5).apply(
+ret_df_final['cum_ret'] = tem.groupby('Stkcd').rolling(forward_window).apply(
     cumulative_ret).reset_index(
         level=0, drop=True).sort_index(level=['Stkcd', 'Trddt'])
 ret_df_final.dropna(subset=['cum_ret'], inplace=True)
@@ -148,3 +154,10 @@ reverse_ret_aver.set_index(
         reverse_ret_aver.index, categories=['Small', '2', '3', '4', 'Big']),
     inplace=True)
 reverse_ret_aver.sort_index()
+
+# %%
+store = pd.HDFStore('data/reverse_portfolie.h5')
+key = 'reverse' + str(backward_window) + '_' + str(forward_window)
+store[key] = reverse_ret_aver
+# store.get('reverse20_5')
+store.close()
