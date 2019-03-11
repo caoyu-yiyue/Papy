@@ -33,19 +33,19 @@ def normalize_ret_rolling_past(df: pd.DataFrame,
     return normalized_ret_serie.reset_index(level=0, drop=True)
 
 
-def cumulative_ret(data_serie: pd.Series):
-    """
-    输入一列数字，计算累积收益率。如：
-    输入[0.4, 0.3, 0.2]，返回（1 * 1.2 * 1.3 * 1.4 - 1）
+# def cumulative_ret(data_serie: pd.Series):
+#     """
+#     输入一列数字，计算累积收益率。如：
+#     输入[0.4, 0.3, 0.2]，返回（1 * 1.2 * 1.3 * 1.4 - 1）
 
-    Parameters:
-    -----------
-    data_serie: array like nums
-    """
-    cumul_ret = 1
-    for num in data_serie:
-        cumul_ret = (1 + num) * cumul_ret
-    return (cumul_ret - 1)
+#     Parameters:
+#     -----------
+#     data_serie: array like nums
+#     """
+#     cumul_ret = 1
+#     for num in data_serie:
+#         cumul_ret = (1 + num) * cumul_ret
+#     return (cumul_ret - 1)
 
 
 # %%
@@ -84,7 +84,8 @@ def cumulative_ret_rolling_forward(df: pd.DataFrame,
     # 由于pandas v0.24.1 还没有向前滚动的接口，这里先将数据倒置过来，然后向后apply 函数，达到目的。
     reverse_order: pd.DataFrame = df[::-1].loc[:, ret_column].shift(shift)
     applied_series: pd.Series = reverse_order.groupby(
-        groupby_column, sort=False).rolling(window).apply(cumulative_ret)
+        groupby_column, sort=False).rolling(window).apply(
+            lambda serie: (serie + 1).product() - 1)
     return applied_series.reset_index(
         level=0, drop=True).sort_index(level=df.index.names)
 
