@@ -122,10 +122,11 @@ def creat_group_signs(df: pd.Series, column_to_cut: str, groupby_column: str,
 
 
 # %%
-def port_ret_mini(df: pd.DataFrame,
-                  groupby_columns: list = ['Trddt', 'cap_group', 'ret_group'],
-                  ret_column: str = 'cum_ret',
-                  weights_column: str = 'dollar_volumn'):
+def reverse_port_ret_mini(
+        df: pd.DataFrame,
+        groupby_columns: list = ['Trddt', 'cap_group', 'ret_group'],
+        ret_column: str = 'cum_ret',
+        weights_column: str = 'dollar_volumn'):
     """
     输入一个数据框，计算每天、每个规模组、每个收益组的加权平均回报率。
     输出一列pd.Series，index 即为时间、规模组、收益组，值为加权平均值。
@@ -209,4 +210,37 @@ def reverse_port_ret_all(serie: pd.Series):
     return reverse_ret_each_day
 
 
-# reverse_port_all(serie=portfolie_ret_serie)
+# reverse_ret_each_day = reverse_port_ret_all(serie=portfolie_ret_serie)
+
+
+# %%
+def reverse_port_ret_aver(df: pd.DataFrame,
+                          groupby_column: str = 'cap_group',
+                          categories: list = ['Small', '2', '3', '4', 'Big']):
+    """
+    输入每天的反转组合收益率DataFrame，求出所有日期的反转组合平均收益率。
+    Parameters:
+    -----------
+    df:
+        pandas.DataFrame
+        进行计算的数据，包含了每日的（5*5）反转组合收益率
+    groupby_column:
+        str
+        进行分组的列名，这里默认为'cap_group'。按此分组后，每组中就是不同日期的数据了。
+    categories:
+        list of str
+        求平均后'cap_group' 的category 属性丢失，重新赋予CategoryIndex 属性时制定顺序用。
+
+    Returns:
+    --------
+    pandas.DataFrame
+        返回平均过后的反转组合收益率
+    """
+    reverse_ret_aver = df.groupby(groupby_column).mean()
+    reverse_ret_aver.set_axis(
+        pd.CategoricalIndex(reverse_ret_aver.index, categories=categories),
+        inplace=True)
+    return reverse_ret_aver.sort_index()
+
+
+# reverse_port_ret_aver(reverse_ret_each_day)
