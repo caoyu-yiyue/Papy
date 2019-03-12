@@ -7,7 +7,7 @@ import numpy as np
 
 # %%
 # window length for backward and forward
-backward_window = 20
+backward_window = 60
 forward_window = 5
 
 # %% read the HDF5 files
@@ -48,9 +48,7 @@ ret_df_final['dollar_volumn'] = ret_df_grouped.apply(
         level=0, drop=True)
 
 # %% add a column for log return
-ret_df_grouped = ret_df_final.groupby('Stkcd', group_keys=False)
-ret_df_final['log_ret'] = ret_df_grouped.apply(
-    lambda df: np.log1p(df['Dretwd']))
+ret_df_final['log_ret'] = np.log1p(ret_df_final['Dretwd'])
 
 # %% add a column for normalized return
 ret_df_grouped = ret_df_final.groupby(level='Stkcd')
@@ -70,17 +68,17 @@ ret_df_final.dropna(subset=['Norm_ret', 'dollar_volumn'], inplace=True)
 
 # %% group by cap
 ret_df_grouped = ret_df_final.groupby(
-    'Trddt', as_index=False, group_keys=False)
-ret_df_final['cap_group'] = ret_df_grouped['Dsmvosd'].apply(
+    'Trddt', group_keys=False)
+ret_df_final['cap_group'] = ret_df_grouped['Dsmvosd'].transform(
     lambda series: pd.qcut(series, q=5, labels=['Small', '2', '3', '4', 'Big'])
-        ).reset_index(level=0, drop=True)
+        )
 
 # %% group by normalize return
-ret_df_final['ret_group'] = ret_df_grouped['Norm_ret'].apply(
+ret_df_final['ret_group'] = ret_df_grouped['Norm_ret'].transform(
     lambda series: pd.qcut(
         series, q=10,
         labels=['Lo', '2', '3', '4', '5', '6', '7', '8', '9', 'Hi'])
-            ).reset_index(level=0, drop=True)
+            )
 
 
 # %% a function for calculate the cumulative return.
