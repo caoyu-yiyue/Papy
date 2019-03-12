@@ -144,6 +144,11 @@ def port_ret_mini(df: pd.DataFrame,
     weights_column:
         str, Default 'dollar_volumn'
         计算加权平均时的权重
+
+    Returns:
+    --------
+    pandas.Series
+        以分组变量为MutipleIndex 的一列pandas.Series
     """
     ret_df_grouped = df.groupby(groupby_columns)
     portfolie_ret_serie = ret_df_grouped.apply(
@@ -152,3 +157,56 @@ def port_ret_mini(df: pd.DataFrame,
 
 
 # port_ret_mini(df=ret_df_final)
+
+
+# %%
+def _reverse_port_one(serie: pd.Series):
+    '''
+    输入不同标准收益率分组的一列序列，输家-赢家获得反转组合收益
+
+    Parameters:
+    ------------
+    serie:
+    pandas.Series
+        一列分组后的收益值，输家在前，赢家在后。（默认情况下，以时间、规模组和收益组为Index）
+
+    Returns:
+    --------
+    list
+        一个包含了len(serie)/ 2 个反转组合收益率的list
+    '''
+    result = []
+    for index in range(int(len(serie) / 2)):
+        high_group = serie.iloc[9 - index]
+        low_group = serie.iloc[index]
+        result.append(low_group - high_group)
+    return result
+
+
+def reverse_port_ret_all(serie: pd.Series):
+    """
+    传入port_ret_mini() 计算所得的细分组加权平均收益率序列，计算出所有日期的反转收益率数据框。
+
+    Parameters:
+    -----------
+    serie:
+        pandas.Seires
+        以时间、规模、收益分组作为MutipleIndex 的pandas.Series
+
+    Returns:
+    --------
+    pandas.DataFrame
+        以日期、规模为MultiIndex，以反转组合标签（"Lo-Hi"）为列名的DataFrame
+    """
+    # 按照前两组分类，然后每组计算反转收益。
+    grouped_serie = serie.groupby(level=[0, 1])
+    reverse_ret_in_serie: pd.Series = grouped_serie.apply(_reverse_port_one)
+    # 将Series of list 转换为DataFrame
+    reverse_ret_each_day = pd.DataFrame(
+        (item for item in reverse_ret_in_serie),
+        index=reverse_ret_in_serie.index,
+        columns=['Lo-Hi', '2-9', '3-8', '4-7', '5-6'])
+    return reverse_ret_each_day
+
+
+# reverse_port_all(serie=portfolie_ret_serie)
