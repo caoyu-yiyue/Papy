@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 
 # %%
@@ -118,3 +119,36 @@ def creat_group_signs(df: pd.Series, column_to_cut: str, groupby_column: str,
     grouped_df = df.loc[:, column_to_cut].groupby(groupby_column)
     return grouped_df.transform(
         lambda serie: pd.qcut(serie, q=quntiles, labels=labels))
+
+
+# %%
+def port_ret_mini(df: pd.DataFrame,
+                  groupby_columns: list = ['Trddt', 'cap_group', 'ret_group'],
+                  ret_column: str = 'cum_ret',
+                  weights_column: str = 'dollar_volumn'):
+    """
+    输入一个数据框，计算每天、每个规模组、每个收益组的加权平均回报率。
+    输出一列pd.Series，index 即为时间、规模组、收益组，值为加权平均值。
+
+    Parameters:
+    -----------
+    df:
+        pd.DataFrame
+        将要计算的数据框本身
+    groupby_columns:
+        list of str, Default ['Trddt', 'cap_group', 'ret_group']
+        用于分组的列名。默认为时间、规模组、收益组
+    ret_columns:
+        str, Default 'cum_ret'
+        用于计算加权收益率的列名
+    weights_column:
+        str, Default 'dollar_volumn'
+        计算加权平均时的权重
+    """
+    ret_df_grouped = df.groupby(groupby_columns)
+    portfolie_ret_serie = ret_df_grouped.apply(
+        lambda df: np.average(df[ret_column], weights=df[weights_column]))
+    return portfolie_ret_serie
+
+
+# port_ret_mini(df=ret_df_final)
