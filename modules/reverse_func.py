@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import numba
 
 
 # %%
@@ -28,10 +29,15 @@ def normalize_ret_rolling_past(df: pd.DataFrame,
         按过去window 期标准化后的收益率。类型为一列与原pandas.DataFrame 的index 相同的Series 对象。
         每组的前(window - 1) 个位置为NaN。
     """
-    normalized_ret_serie: pd.Series = df[ret_column].groupby(
-        level=groupby_column).rolling(window=window).apply(
-            lambda serie: (serie[-1] - serie.mean()) / serie.std())
-    return normalized_ret_serie.reset_index(level=0, drop=True)
+
+    @numba.jit
+    def _normalize_ret(serie):
+        return (serie[-1] - serie.mean()) / serie.std()
+
+    normalized_ret_serie: pd.Series = df.loc[:, ret_column].groupby(
+        level=groupby_column,
+        group_keys=False).rolling(window=window).apply(_normalize_ret)
+    return normalized_ret_serie
 
 
 # def cumulative_ret(data_serie: pd.Series):
@@ -82,13 +88,17 @@ def cumulative_ret_rolling_forward(df: pd.DataFrame,
     pandas.Series
         滚动按未来window 计算得到的累积收益率Series。
     """
+
+    @numba.jit
+    def _cumulative_ret(ndarrary: np.ndarray):
+        return (ndarrary + 1).prod() - 1
+
     # 由于pandas v0.24.1 还没有向前滚动的接口，这里先将数据倒置过来，然后向后apply 函数，达到目的。
     reverse_order: pd.DataFrame = df[::-1].loc[:, ret_column].shift(shift)
     applied_series: pd.Series = reverse_order.groupby(
-        groupby_column, sort=False).rolling(window).apply(
-            lambda serie: (serie + 1).product() - 1)
-    return applied_series.reset_index(
-        level=0, drop=True).sort_index(level=df.index.names)
+        groupby_column, group_keys=False,
+        sort=False).rolling(window).apply(_cumulative_ret)
+    return applied_series.sort_index(level=df.index.names)
 
 
 # %%

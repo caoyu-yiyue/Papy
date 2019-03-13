@@ -3,69 +3,31 @@
 # %% import modules.
 import pandas as pd
 import numpy as np
-
-# %%
-# window length for backward and forward
-backward_window = 60
-forward_window = 5
+import modules.reverse_func as rfunc
 
 # %%
 # read the prepared data
 ret_df_final = pd.read_hdf('data/prepared_data.h5')
 
-# %% add a column for normalized return
-ret_df_grouped = ret_df_final.groupby(level='Stkcd')
-# 计算标准化收益率
-normalied_df: pd.Series = ret_df_grouped['log_ret'].rolling(
-    window=backward_window).apply(
-        lambda window: (window[-1] - window.mean()) / window.std())
-# 标准化收益率合并到原数据
-normalied_df.reset_index(level=0, drop=True, inplace=True)
-ret_df_final['Norm_ret'] = normalied_df
+# %%
+# add a column for normaliezed return
+ret_df_final['norm_ret'] = rfunc.normalize_ret_rolling_past(
+    df=ret_df_final, window=60)
+# 清理空值，防止因为两列空值重叠时多删数据。
+ret_df_final.dropna(subset=['norm_ret', 'dollar_volume'], inplace=True)
 
-# 在最后清理空值，防止因为两列空值重叠时多删数据。
-ret_df_final.dropna(subset=['Norm_ret', 'dollar_volume'], inplace=True)
+# %%
+# add a column for return group
+ret_df_final['ret_group'] = rfunc.creat_group_signs(
+    df=ret_df_final,
+    column_to_cut='norm_ret',
+    groupby_column='Trddt',
+    quntiles=10,
+    labels=['Lo', '2', '3', '4', '5', '6', '7', '8', '9', 'Hi'])
 
-##############################################################################
-# group the data.
-
-
-# %% group by normalize return
-ret_df_final['ret_group'] = ret_df_grouped['Norm_ret'].transform(
-    lambda series: pd.qcut(
-        series, q=10,
-        labels=['Lo', '2', '3', '4', '5', '6', '7', '8', '9', 'Hi'])
-            )
-
-
-# %% a function for calculate the cumulative return.
-def cumulative_ret(data_serie: pd.Series):
-    '''
-    data_serie: array like nums
-    输入一列数字，计算累积收益率。如：
-    输入[0.4, 0.3, 0.2]，返回（1 * 1.2 * 1.3 * 1.4 - 1）
-    '''
-    cumul_ret = 1
-    for num in data_serie:
-        cumul_ret = (1 + num) * cumul_ret
-    return (cumul_ret - 1)
-
-
-# cumulative_ret([0.4, 0.3, 0.2, 0.1])
-
-# %% calculate cumulative return for each stock.
-# 将时间倒序，解决下一步rolling 对象没有向前rolling 的问题。
-ret_df_grouped = ret_df_final.groupby('Stkcd')
-tem = ret_df_grouped['Dretwd'].apply(
-    lambda serie: serie.sort_index(level='Trddt', ascending=False).shift(2)
-).reset_index(
-    level=0, drop=True)
-
-# 将上面倒叙过后的数据框，使用cumulative_ret 函数计算未来五天的累积收益率。最后把顺序转回来
-ret_df_final['cum_ret'] = tem.groupby('Stkcd').rolling(forward_window).apply(
-    cumulative_ret).reset_index(
-        level=0, drop=True).sort_index(level=['Stkcd', 'Trddt'])
-ret_df_final.dropna(subset=['cum_ret'], inplace=True)
+# %%
+ret_df_final['cum_ret'] = rfunc.cumulative_ret_rolling_forward(
+    df=ret_df_final, window=5)
 
 # %% portfolie return for every day, cap_group and ret_group
 # 计算每组按照dollar_volume 加权得到的组合收益率
