@@ -126,7 +126,7 @@ def reverse_port_ret_mini(
         df: pd.DataFrame,
         groupby_columns: list = ['Trddt', 'cap_group', 'ret_group'],
         ret_column: str = 'cum_ret',
-        weights_column: str = 'dollar_volumn'):
+        weights_column: str = 'dollar_volume'):
     """
     输入一个数据框，计算每天、每个规模组、每个收益组的加权平均回报率。
     输出一列pd.Series，index 即为时间、规模组、收益组，值为加权平均值。
@@ -143,7 +143,7 @@ def reverse_port_ret_mini(
         str, Default 'cum_ret'
         用于计算加权收益率的列名
     weights_column:
-        str, Default 'dollar_volumn'
+        str, Default 'dollar_volume'
         计算加权平均时的权重
 
     Returns:
