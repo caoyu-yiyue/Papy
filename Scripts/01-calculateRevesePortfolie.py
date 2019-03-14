@@ -3,7 +3,7 @@
 # %% import modules.
 import pandas as pd
 import numpy as np
-import modules.reverse_func as rfunc
+from modules import reverse_func as rfunc
 
 # %%
 # read the prepared data
