@@ -94,10 +94,10 @@ def cumulative_ret_rolling_forward(df: pd.DataFrame,
         return (ndarrary + 1).prod() - 1
 
     # 由于pandas v0.24.1 还没有向前滚动的接口，这里先将数据倒置过来，然后向后apply 函数，达到目的。
-    reverse_order: pd.DataFrame = df[::-1].loc[:, ret_column].shift(shift)
+    reverse_order: pd.DataFrame = df[::-1].loc[:, ret_column]
     applied_series: pd.Series = reverse_order.groupby(
         groupby_column, group_keys=False,
-        sort=False).rolling(window).apply(_cumulative_ret)
+        sort=False).shift(shift).rolling(window).apply(_cumulative_ret)
     return applied_series.sort_index(level=df.index.names)
 
 
