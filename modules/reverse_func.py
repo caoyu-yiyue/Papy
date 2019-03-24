@@ -40,21 +40,6 @@ def normalize_ret_rolling_past(df: pd.DataFrame,
     return normalized_ret_serie
 
 
-# def cumulative_ret(data_serie: pd.Series):
-#     """
-#     输入一列数字，计算累积收益率。如：
-#     输入[0.4, 0.3, 0.2]，返回（1 * 1.2 * 1.3 * 1.4 - 1）
-
-#     Parameters:
-#     -----------
-#     data_serie: array like nums
-#     """
-#     cumul_ret = 1
-#     for num in data_serie:
-#         cumul_ret = (1 + num) * cumul_ret
-#     return (cumul_ret - 1)
-
-
 # %%
 def cumulative_ret_rolling_forward(df: pd.DataFrame,
                                    window: int,
@@ -94,7 +79,7 @@ def cumulative_ret_rolling_forward(df: pd.DataFrame,
         return (ndarrary + 1).prod() - 1
 
     # 由于pandas v0.24.1 还没有向前滚动的接口，这里先将数据倒置过来，然后向后apply 函数，达到目的。
-    reverse_order: pd.DataFrame = df[::-1].loc[:, ret_column]
+    reverse_order: pd.Series = df[::-1].loc[:, ret_column]
     applied_series: pd.Series = reverse_order.groupby(
         groupby_column, group_keys=False,
         sort=False).shift(shift).rolling(window).apply(_cumulative_ret)
@@ -161,10 +146,14 @@ def reverse_port_ret_mini(
     pandas.Series
         以分组变量为MutipleIndex 的一列pandas.Series
     """
-    ret_df_grouped = df.groupby(groupby_columns)
-    portfolie_ret_serie = ret_df_grouped.apply(
-        lambda df: np.average(df[ret_column], weights=df[weights_column]))
-    return portfolie_ret_serie
+
+    @numba.jit(nopython=True)
+    def _weighted_mean(data_col, weights_col):
+        return (data_col * weights_col).sum() / weights_col.sum()
+
+    return df.groupby(groupby_columns).apply(
+        lambda x: _weighted_mean(
+            x[ret_column].to_numpy(), x[weights_column].to_numpy()))
 
 
 # port_ret_mini(df=ret_df_final)

@@ -2,12 +2,11 @@
 
 # %% import modules.
 import pandas as pd
-import numpy as np
 from modules import reverse_func as rfunc
 
 # %%
 # read the prepared data
-ret_df_final = pd.read_hdf('data/prepared_data.h5')
+ret_df_final: pd.DataFrame = pd.read_hdf('data/prepared_data.h5')
 
 # %%
 # add a column for normaliezed return
@@ -26,21 +25,15 @@ ret_df_final['ret_group'] = rfunc.creat_group_signs(
     labels=['Lo', '2', '3', '4', '5', '6', '7', '8', '9', 'Hi'])
 
 # %%
+# add a column for cumulative return for each stosk
 ret_df_final['cum_ret'] = rfunc.cumulative_ret_rolling_forward(
     df=ret_df_final, window=5)
+ret_df_final.dropna(subset=['cum_ret'], inplace=True)
 
 # %% portfolie return for every day, cap_group and ret_group
 # 计算每组按照dollar_volume 加权得到的组合收益率
-ret_df_grouped = ret_df_final.groupby(['Trddt', 'cap_group', 'ret_group'])
-portfolie_ret_serie = ret_df_grouped.apply(
-    lambda df: np.average(df['cum_ret'], weights=df['dollar_volume']))
+portfolie_ret_serie = rfunc.reverse_port_ret_mini(df=ret_df_final)
 
-# %%
-# 试用agg 函数。性能表现不好暂时放在这里。
-# ret_df_grouped.agg({
-#     'cum_ret':
-#     lambda x: np.average(x, weights=ret_df_grouped['dollar_volume'])
-# })
 
 # %% calculate every day, in every cap_group, the reverse portfolie
 
