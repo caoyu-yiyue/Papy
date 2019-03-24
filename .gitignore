@@ -6,3 +6,4 @@ data/prepared_data.h5
 .DS_Store
 .ipynb_checkpoints/
 modules/__pycache__/
+Scripts/test.py
