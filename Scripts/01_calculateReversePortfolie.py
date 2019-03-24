@@ -16,6 +16,21 @@ ret_df_final['norm_ret'] = rfunc.normalize_ret_rolling_past(
 ret_df_final.dropna(subset=['norm_ret', 'dollar_volume'], inplace=True)
 
 # %%
+# add a column for cumulative return for each stosk
+ret_df_final['cum_ret'] = rfunc.cumulative_ret_rolling_forward(
+    df=ret_df_final, window=5)
+ret_df_final.dropna(subset=['cum_ret'], inplace=True)
+
+# %%
+# add a captain group sign
+ret_df_final['cap_group'] = rfunc.creat_group_signs(
+    df=ret_df_final,
+    column_to_cut='Dsmvosd',
+    groupby_column='Trddt',
+    quntiles=5,
+    labels=['Small', '2', '3', '4', 'Big'])
+
+# %%
 # add a column for return group
 ret_df_final['ret_group'] = rfunc.creat_group_signs(
     df=ret_df_final,
@@ -23,12 +38,6 @@ ret_df_final['ret_group'] = rfunc.creat_group_signs(
     groupby_column='Trddt',
     quntiles=10,
     labels=['Lo', '2', '3', '4', '5', '6', '7', '8', '9', 'Hi'])
-
-# %%
-# add a column for cumulative return for each stosk
-ret_df_final['cum_ret'] = rfunc.cumulative_ret_rolling_forward(
-    df=ret_df_final, window=5)
-ret_df_final.dropna(subset=['cum_ret'], inplace=True)
 
 # %% portfolie return for every day, cap_group and ret_group
 # 计算每组按照dollar_volume 加权得到的组合收益率
@@ -40,8 +49,8 @@ reverse_ret_each_day: pd.DataFrame = rfunc.reverse_port_ret_all(
     serie=portfolie_ret_serie)
 
 # 各个日期的反转收益求均值
-reverse_ret_aver: pd.DataFrame = reverse_ret_each_day.groupby(
-    'cap_group', sort=False).mean()
+reverse_ret_aver: pd.DataFrame = rfunc.reverse_port_ret_aver(
+    df=reverse_ret_each_day)
 
 # %%
 # store = pd.HDFStore('data/reverse_portfolie.h5')

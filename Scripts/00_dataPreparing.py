@@ -3,7 +3,6 @@
 import pandas as pd
 import datetime
 import numpy as np
-import modules.reverse_func as rfunc
 
 ###############################################################################
 # 1. 删除宣发日以及后一日的股票
@@ -46,17 +45,9 @@ ret_df_final['dollar_volume'] = ret_df_grouped.apply(
 # add a column for log return
 ret_df_final['log_ret'] = np.log1p(ret_df_final['Dretwd'])
 
-# add a captain group sign
-ret_df_final['cap_group'] = rfunc.creat_group_signs(
-    df=ret_df_final,
-    column_to_cut='Dsmvosd',
-    groupby_column='Trddt',
-    quntiles=5,
-    labels=['Small', '2', '3', '4', 'Big'])
-
 #############################################################################
 # 3.save the prepared data.
 #############################################################################
 # %%
 ret_df_final.to_hdf(
-    'data/prepared_data.h5', key='prepared_data', format='table')
+    'data/prepared_data.h5', key='prepared_data')
