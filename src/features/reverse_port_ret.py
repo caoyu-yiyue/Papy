@@ -1,10 +1,14 @@
 import pandas as pd
 import numpy as np
 import numba
+import click
 
 
-# %%
-# function for normalized return in past rolling window.
+def read_prepared_file(file='data/interim/prepared_data.h5'):
+    dframe = pd.read_hdf(file)
+    return dframe
+
+
 def normalize_ret_rolling_past(df: pd.DataFrame,
                                window: int,
                                ret_column: str = 'log_ret',
@@ -40,7 +44,6 @@ def normalize_ret_rolling_past(df: pd.DataFrame,
     return normalized_ret_serie
 
 
-# %%
 def cumulative_ret_rolling_forward(df: pd.DataFrame,
                                    window: int,
                                    ret_column: str = 'Dretwd',
@@ -86,7 +89,6 @@ def cumulative_ret_rolling_forward(df: pd.DataFrame,
     return applied_series.sort_index(level=df.index.names)
 
 
-# %%
 def creat_group_signs(df: pd.Series, column_to_cut: str, groupby_column: str,
                       quntiles: int, labels: list):
     """
@@ -116,7 +118,6 @@ def creat_group_signs(df: pd.Series, column_to_cut: str, groupby_column: str,
         lambda serie: pd.qcut(serie, q=quntiles, labels=labels))
 
 
-# %%
 def reverse_port_ret_mini(
         df: pd.DataFrame,
         groupby_columns: list = ['Trddt', 'cap_group', 'ret_group'],
@@ -156,10 +157,6 @@ def reverse_port_ret_mini(
             x[ret_column].to_numpy(), x[weights_column].to_numpy()))
 
 
-# port_ret_mini(df=ret_df_final)
-
-
-# %%
 def _reverse_port_one(serie: pd.Series):
     '''
     输入不同标准收益率分组的一列序列，输家-赢家获得反转组合收益
@@ -209,10 +206,6 @@ def reverse_port_ret_all(serie: pd.Series):
     return reverse_ret_each_day
 
 
-# reverse_ret_each_day = reverse_port_ret_all(serie=portfolie_ret_serie)
-
-
-# %%
 def reverse_port_ret_aver(df: pd.DataFrame,
                           groupby_column: str = 'cap_group',
                           categories: list = ['Small', '2', '3', '4', 'Big']):
@@ -242,4 +235,88 @@ def reverse_port_ret_aver(df: pd.DataFrame,
     return reverse_ret_aver.sort_index()
 
 
-# reverse_port_ret_aver(reverse_ret_each_day)
+def reverse_port_ret_quick(dframe: pd.DataFrame,
+                           backward_window: int = 60,
+                           forward_window: int = 5):
+    """
+    将如上计算反转组合收益率的步骤组合在一起，
+    快速计算一个按前backward_window 排序，持有forward_window 的反转组合收益时间序列。
+
+    Parameters:
+    ------------
+    dframe:
+        pd.DataFrame
+        用于计算反转收益的整体数据框
+
+    backward_window:
+        int, default 60
+        排序期时长，默认为60
+
+    forward_window:
+        int, default 5
+        持有期时长，默认为5
+
+    Rerurns:
+        pd.DataFrame
+        一个按时间和市值组别为index，反转组合标示（如Lo-Hi）为column 的数据框
+    """
+    # add a column for normaliezed return
+    dframe['norm_ret'] = normalize_ret_rolling_past(
+        df=dframe, window=backward_window)
+
+    # add a column for cumulative return for each stosk
+    dframe['cum_ret'] = cumulative_ret_rolling_forward(
+        df=dframe, window=forward_window)
+
+    # drop na values
+    dframe.dropna(inplace=True)
+
+    # add a captain group sign
+    dframe['cap_group'] = creat_group_signs(
+        df=dframe,
+        column_to_cut='Dsmvosd',
+        groupby_column='Trddt',
+        quntiles=5,
+        labels=['Small', '2', '3', '4', 'Big'])
+
+    # add a column for return group
+    dframe['ret_group'] = creat_group_signs(
+        df=dframe,
+        column_to_cut='norm_ret',
+        groupby_column='Trddt',
+        quntiles=10,
+        labels=['Lo', '2', '3', '4', '5', '6', '7', '8', '9', 'Hi'])
+
+    # portfolie return for every day, cap_group and ret_group
+    portfolie_ret_serie = reverse_port_ret_mini(df=dframe)
+
+    # Low group substract high group to form reverse portfolie.
+    reverse_ret_time_series: pd.DataFrame = reverse_port_ret_all(
+        serie=portfolie_ret_serie)
+
+    return reverse_ret_time_series
+
+
+def read_reverse_port_ret_data(fname='data/interim/reverse_port_ret.pickle'):
+    dframe = pd.read_pickle(fname)
+    return dframe
+
+
+@click.command()
+@click.argument(
+    'input_file', type=click.Path(exists=True, readable=True, dir_okay=True))
+@click.argument('output_file', type=click.Path(writable=True, dir_okay=True))
+def main(input_file, output_file):
+
+    print('calculating reverse portfolie return for\
+         backward_window = 60 and forward_window = 5')
+
+    dframe = read_prepared_file(input_file)
+    reverse_ret_time_series = reverse_port_ret_quick(dframe)
+
+    # save the reverse_ret_time_series
+    reverse_ret_time_series.to_pickle(output_file)
+
+
+if __name__ == "__main__":
+    main()

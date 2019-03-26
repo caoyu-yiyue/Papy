@@ -70,7 +70,7 @@ for index, file in enumerate(file_list):
 [x.shape for x in [ret_df, ret_market, ret_Rf, annodt_df, turnOver_df]]
 
 # %% store the readed data frames.
-store = pd.HDFStore('data/raw_data.h5')
+store = pd.HDFStore('data/raw/raw_data.h5')
 store['ret_df'] = ret_df
 store['ret_market'] = ret_market
 store['ret_Rf'] = ret_Rf

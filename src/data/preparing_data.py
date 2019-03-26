@@ -9,7 +9,7 @@ import numpy as np
 ###############################################################################
 
 # %% read the HDF5 files
-store = pd.HDFStore('data/raw_data.h5')
+store = pd.HDFStore('data/raw/raw_data.h5')
 ret_df: pd.DataFrame = store.get('ret_df').sort_index()
 annodt_df: pd.DataFrame = store.get('annodt_df')
 store.close()
@@ -49,5 +49,4 @@ ret_df_final['log_ret'] = np.log1p(ret_df_final['Dretwd'])
 # 3.save the prepared data.
 #############################################################################
 # %%
-ret_df_final.to_hdf(
-    'data/prepared_data.h5', key='prepared_data')
+ret_df_final.to_hdf('data/interim/prepared_data.h5', key='prepared_data')
