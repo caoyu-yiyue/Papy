@@ -34,13 +34,15 @@ def normalize_ret_rolling_past(df: pd.DataFrame,
         每组的前(window - 1) 个位置为NaN。
     """
 
+    print('Calculate the past window normalized return...')
+
     @numba.jit
     def _normalize_ret(serie):
         return (serie[-1] - serie.mean()) / serie.std()
 
     normalized_ret_serie: pd.Series = df.loc[:, ret_column].groupby(
-        level=groupby_column,
-        group_keys=False).rolling(window=window).apply(_normalize_ret)
+        level=groupby_column, group_keys=False).rolling(window=window).apply(
+            _normalize_ret, raw=True)
     return normalized_ret_serie
 
 
@@ -77,6 +79,8 @@ def cumulative_ret_rolling_forward(df: pd.DataFrame,
         滚动按未来window 计算得到的累积收益率Series。
     """
 
+    print('Calculating the forward window cumulative retrun...')
+
     @numba.jit
     def _cumulative_ret(ndarrary: np.ndarray):
         return (ndarrary + 1).prod() - 1
@@ -85,7 +89,8 @@ def cumulative_ret_rolling_forward(df: pd.DataFrame,
     reverse_order: pd.Series = df[::-1].loc[:, ret_column]
     applied_series: pd.Series = reverse_order.groupby(
         groupby_column, group_keys=False,
-        sort=False).shift(shift).rolling(window).apply(_cumulative_ret)
+        sort=False).shift(shift).rolling(window).apply(
+            _cumulative_ret, raw=True)
     return applied_series.sort_index(level=df.index.names)
 
 
@@ -113,6 +118,9 @@ def creat_group_signs(df: pd.Series, column_to_cut: str, groupby_column: str,
         list
         各组的标识名。长度需要等于quntiles
     """
+
+    print('Creating the group signs for {}...'.format(column_to_cut))
+
     grouped_df = df.loc[:, column_to_cut].groupby(groupby_column)
     return grouped_df.transform(
         lambda serie: pd.qcut(serie, q=quntiles, labels=labels))
@@ -147,6 +155,8 @@ def reverse_port_ret_mini(
     pandas.Series
         以分组变量为MutipleIndex 的一列pandas.Series
     """
+
+    print('Calculating the weighted average return for mini group.')
 
     @numba.jit(nopython=True)
     def _weighted_mean(data_col, weights_col):
@@ -195,6 +205,9 @@ def reverse_port_ret_all(serie: pd.Series):
     pandas.DataFrame
         以日期、规模为MultiIndex，以反转组合标签（"Lo-Hi"）为列名的DataFrame
     """
+
+    print('Calculating the reverse portfolie return...')
+
     # 按照前两组分类，然后每组计算反转收益。
     grouped_serie = serie.groupby(level=[0, 1])
     reverse_ret_in_serie: pd.Series = grouped_serie.apply(_reverse_port_one)
