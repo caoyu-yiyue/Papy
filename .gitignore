@@ -2,7 +2,6 @@
 .vscode/
 notebook_env.db
 /data/
-data/prepared_data.h5
 .DS_Store
 .ipynb_checkpoints/
 src/__pycache__/
