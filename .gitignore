@@ -4,4 +4,4 @@ notebook_env.db
 /data/
 .DS_Store
 .ipynb_checkpoints/
-src/__pycache__/
+__pycache__/

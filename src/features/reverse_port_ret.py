@@ -4,7 +4,7 @@ import numba
 import click
 
 
-def read_prepared_file(file='data/interim/prepared_data.h5'):
+def read_prepared_data(file='data/interim/prepared_data.h5'):
     dframe = pd.read_hdf(file)
     return dframe
 
@@ -34,7 +34,8 @@ def normalize_ret_rolling_past(df: pd.DataFrame,
         每组的前(window - 1) 个位置为NaN。
     """
 
-    print('Calculate the past window normalized return...')
+    print('Calculating the past window normalized return for column \'{}\'...'.
+          format(ret_column))
 
     @numba.jit
     def _normalize_ret(serie):
@@ -79,7 +80,9 @@ def cumulative_ret_rolling_forward(df: pd.DataFrame,
         滚动按未来window 计算得到的累积收益率Series。
     """
 
-    print('Calculating the forward window cumulative retrun...')
+    print(
+        'Calculating the forward window cumulative retrun for column \'{}\'...'
+        .format(ret_column))
 
     @numba.jit
     def _cumulative_ret(ndarrary: np.ndarray):
@@ -156,7 +159,7 @@ def reverse_port_ret_mini(
         以分组变量为MutipleIndex 的一列pandas.Series
     """
 
-    print('Calculating the weighted average return for mini group.')
+    print('Calculating the weighted average return for mini group...')
 
     @numba.jit(nopython=True)
     def _weighted_mean(data_col, weights_col):
@@ -250,7 +253,9 @@ def reverse_port_ret_aver(df: pd.DataFrame,
 
 def reverse_port_ret_quick(dframe: pd.DataFrame,
                            backward_window: int = 60,
-                           forward_window: int = 5):
+                           forward_window: int = 5,
+                           col_for_backward_looking: str = 'log_ret',
+                           col_for_forward_looking: str = 'Dretwd'):
     """
     将如上计算反转组合收益率的步骤组合在一起，
     快速计算一个按前backward_window 排序，持有forward_window 的反转组合收益时间序列。
@@ -275,11 +280,11 @@ def reverse_port_ret_quick(dframe: pd.DataFrame,
     """
     # add a column for normaliezed return
     dframe['norm_ret'] = normalize_ret_rolling_past(
-        df=dframe, window=backward_window)
+        df=dframe, window=backward_window, ret_column=col_for_backward_looking)
 
     # add a column for cumulative return for each stosk
     dframe['cum_ret'] = cumulative_ret_rolling_forward(
-        df=dframe, window=forward_window)
+        df=dframe, window=forward_window, ret_column=col_for_forward_looking)
 
     # drop na values
     dframe.dropna(inplace=True)
@@ -324,7 +329,7 @@ def main(input_file, output_file):
     print('calculating reverse portfolie return for\
          backward_window = 60 and forward_window = 5')
 
-    dframe = read_prepared_file(input_file)
+    dframe = read_prepared_data(input_file)
     reverse_ret_time_series = reverse_port_ret_quick(dframe)
 
     # save the reverse_ret_time_series

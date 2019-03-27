@@ -19,4 +19,9 @@ data/interim/prepared_data.h5: data/raw/raw_data.h5
 data/interim/reverse_port_ret.pickle: data/interim/prepared_data.h5
 	python3 src/features/reverse_port_ret.py $< $@
 
-all: data/raw/raw_data.h5 data/interim/prepared_data.h5 data/interim/reverse_port_ret.pickle
+# caculate a reverse porfolie return time series using the excess return for cumulate.
+data/interim/reverse_ret_use_exc.pickle: data/interim/prepared_data.h5
+	python3 src/features/reverse_ext_ret.py $@
+
+all: data/raw/raw_data.h5 data/interim/prepared_data.h5 data/interim/reverse_port_ret.pickle\
+data/interim/reverse_ret_use_exc.pickle
