@@ -1,5 +1,5 @@
 .env/
-.vscode/
+# .vscode/
 notebook_env.db
 /data/
 .DS_Store
