@@ -6,6 +6,6 @@
     "python.linting.flake8Enabled": true,
     "python.envFile": "${workspaceFolder}/papy.env",
     "terminal.integrated.env.osx": {
-        "PYTHONPATH": "${workspaceFolder}/src/:${PYTHONPATH}"
+        "PYTHONPATH": "${workspaceFolder}/:${PYTHONPATH}"
     }
 }
