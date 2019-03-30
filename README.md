@@ -12,11 +12,14 @@
 │   ├── external
 │   ├── interim
 │   │   ├── prepared_data.h5
-│   │   └── reverse_port_ret.pickle
+│   │   ├── reverse_port_ret.pickle
+│   │   └── reverse_ret_use_exc.pickle
 │   ├── processed
 │   └── raw
 │       └── raw_data.h5
 ├── notebooks
+│   ├── explore
+│   └── report
 ├── papy.env
 ├── requirements.txt
 └── src
@@ -27,6 +30,7 @@
     │   └── reading_csv_to_hdfs.py
     ├── features
     │   ├── __init__.py
+    │   ├── reverse_ext_ret.py
     │   └── reverse_port_ret.py
     ├── models
     │   └── __init__.py
@@ -43,6 +47,7 @@ data 文件夹用来存储各种数据，目前包括：
 * `interim/`： 构建用于建模的数据之前产生的中间数据。
   * `prepared_data.h5`：对原始数据进行整理形成的清理并增加必要所需列的数据
   * `reverse_port_ret.pickle`：反转组合收益的时间序列数据
+  * `reverse_ret_use_exc.pickle`：使用**超额收益率**计算的反转组合收益率时间序列数据
 * `processed/`： 经过处理后，可以用于建模的数据。
 * `external/`：一些外部数据
 
@@ -57,12 +62,16 @@ src/ 文件夹保存了处理数据所用的Python 源代码，用于作为modul
   * `preparing_data.py`：进行数据准备的脚本，生成的文件保存在`data/interim/prepared_data.h5`
 * `features/`： 准备模型features 的脚本合集
   * `reverse_port_ret.py`：生成反转组合收益率所用的一些函数，以及直接作为脚本生成**反转组合**收益的时间序列。脚本生成的数据在`data/interim/reverse_port_ret.pickle`
+  * `reverse_ext_ret.py`：生成使用**超额收益率**计算所得的反转组合收益率时间序列数据。生成的数据保存在`reverse_ret_use_exc.pickle`
 * `models`：进行模型建立的脚本
 * `visualization`：用于进行一些可视化操作的脚本
 
 ## notebooks/
 
 用于探索数据和生成报告的Jupyter notebooks
+
+* `explore/`：用于数据探索的jupyter notebook
+* `report`：用于报告的jupyter notebook
 
 ## 其他文件
 
