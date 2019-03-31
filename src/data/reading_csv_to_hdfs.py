@@ -4,9 +4,10 @@
 import glob
 import pandas as pd
 
+data_root_folder = '/Users/caoyue/Codes/R/Paper_test/Data/rawData/'
 # %% search for the file list for Daily return and read to data frame.
 file_list = glob.glob(
-    '/Users/caoyue/Codes/R/Paper_test/Data/rawData/TRD_Dalyr*.csv')
+    data_root_folder + 'TRD_Dalyr*.csv')
 for index, file in enumerate(file_list):
     temp_df = pd.read_csv(
         file,
@@ -21,7 +22,7 @@ for index, file in enumerate(file_list):
 
 # %% read market return data frame.
 ret_market = pd.read_csv(
-    '/Users/caoyue/Codes/R/Paper_test/Data/rawData/TRD_Dalym.csv',
+    data_root_folder + 'TRD_Dalym.csv',
     sep='\t',
     encoding='utf-16le',
     header=0,
@@ -31,7 +32,7 @@ ret_market = pd.read_csv(
 
 # %% read risk free return data frame.
 ret_Rf = pd.read_csv(
-    '/Users/caoyue/Codes/R/Paper_test/Data/rawData/TRD_Nrrate.csv',
+    data_root_folder + 'TRD_Nrrate.csv',
     sep='\t',
     encoding='utf-16le',
     header=0,
@@ -41,7 +42,7 @@ ret_Rf = pd.read_csv(
 
 # %% read announce date data frame.
 annodt_df = pd.read_csv(
-    '/Users/caoyue/Codes/R/Paper_test/Data/rawData/IAR_Rept.csv',
+    data_root_folder + 'IAR_Rept.csv',
     sep='\t',
     encoding='utf-16le',
     usecols=['Stkcd', 'Annodt'],
@@ -50,7 +51,7 @@ annodt_df = annodt_df.drop_duplicates().set_index('Stkcd')
 
 # %% read turn over data frame.
 file_list = glob.glob(
-    '/Users/caoyue/Codes/R/Paper_test/Data/rawData/STK_MKT_Dalyr*.csv')
+    data_root_folder + 'STK_MKT_Dalyr*.csv')
 for index, file in enumerate(file_list):
     temp_df = pd.read_csv(
         file,
@@ -66,6 +67,19 @@ for index, file in enumerate(file_list):
         turnOver_df = turnOver_df.append(temp_df)
 
 
+# %%
+# read market index data frame.
+market_index = pd.read_csv(
+    data_root_folder + 'TRD_Index.csv',
+    sep='\t',
+    encoding='utf-16le',
+    header=0,
+    usecols=['Trddt', 'Clsindex'],
+    parse_dates=['Trddt'],
+    index_col='Trddt')
+market_index.sort_index(inplace=True)
+
+
 # %% look up data frame shape.
 [x.shape for x in [ret_df, ret_market, ret_Rf, annodt_df, turnOver_df]]
 
@@ -76,4 +90,5 @@ store['ret_market'] = ret_market
 store['ret_Rf'] = ret_Rf
 store['annodt_df'] = annodt_df
 store['turnOver_df'] = turnOver_df
+store['market_index'] = market_index
 store.close()
