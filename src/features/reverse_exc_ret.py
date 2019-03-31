@@ -4,25 +4,6 @@ from src.data import preparing_data as predata
 import click
 
 
-# def read_rf_data(file='data/raw/raw_data.h5'):
-#     """
-#     read the risk free return seires.
-#     Parameters:
-#     -----------
-#     file:
-#         str, default 'data/raw/raw_data.h5'
-#         the file for risk free return pd.DataFrame.
-#     Returns:
-#     --------
-#     pd.Series:
-#         a series for the risk free return with index for date.
-
-#     """
-
-#     ret_f: pd.Series = pd.read_hdf(file, key='ret_Rf').loc[:, 'ret_f']
-#     return ret_f
-
-
 def add_exc_ret_column(dframe: pd.DataFrame,
                        rf_series: pd.Series,
                        exc_col_name: str = 'exc_ret'):
@@ -51,6 +32,11 @@ def add_exc_ret_column(dframe: pd.DataFrame,
     exc_ret: pd.Series = dframe['Dretwd'] - rf_series
     dframe[exc_col_name] = exc_ret
 
+    return dframe
+
+
+def read_reverse_exc_data(file='data/interim/reverse_ret_use_exc.pickle'):
+    dframe = pd.read_pickle(file)
     return dframe
 
 
