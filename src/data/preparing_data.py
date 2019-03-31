@@ -22,7 +22,7 @@ def read_rf_data(file='data/raw/raw_data.h5'):
     读取无风险收益率，直接返回以时间为index 的无风险收益率的pd.Series
     """
     ret_f: pd.Series = pd.read_hdf(file, key='ret_Rf').loc[:, 'ret_f']
-    return ret_f
+    return ret_f.sort_index()
 
 
 def read_rm_data(file='data/raw/raw_data.h5'):
@@ -30,7 +30,7 @@ def read_rm_data(file='data/raw/raw_data.h5'):
     读取市场收益率数据，直接返回以时间为index 的市场收益率pd.Series
     """
     ret_market: pd.Series = pd.read_hdf(file, key='ret_market').loc[:, 'ret_m']
-    return ret_market
+    return ret_market.sort_index()
 
 
 def read_annodt_data(file='data/raw/raw_data.h5'):
@@ -56,7 +56,7 @@ def read_market_index_data(file='data/raw/raw_data.h5'):
 
     market_index: pd.Series = pd.read_hdf(
         file, key="market_index").loc[:, 'Clsindex']
-    return market_index
+    return market_index.sort_index()
 
 
 ###############################################################################
