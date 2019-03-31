@@ -2,11 +2,12 @@ import pandas as pd
 import numpy as np
 import numba
 import click
+from src.data import preparing_data as predata
 
 
-def read_prepared_data(file='data/interim/prepared_data.h5'):
-    dframe = pd.read_hdf(file)
-    return dframe
+# def read_prepared_data(file='data/interim/prepared_data.h5'):
+#     dframe = pd.read_hdf(file)
+#     return dframe
 
 
 def normalize_ret_rolling_past(df: pd.DataFrame,
@@ -329,7 +330,7 @@ def main(input_file, output_file):
     print('calculating reverse portfolie return for\
          backward_window = 60 and forward_window = 5')
 
-    dframe = read_prepared_data(input_file)
+    dframe = predata.read_prepared_data()
     reverse_ret_time_series = reverse_port_ret_quick(dframe)
 
     # save the reverse_ret_time_series

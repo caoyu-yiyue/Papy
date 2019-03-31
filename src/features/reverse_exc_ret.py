@@ -1,25 +1,26 @@
 import pandas as pd
 from src.features import reverse_port_ret as rpt
+from src.data import preparing_data as predata
 import click
 
 
-def read_rf_data(file='data/raw/raw_data.h5'):
-    """
-    read the risk free return seires.
-    Parameters:
-    -----------
-    file:
-        str, default 'data/raw/raw_data.h5'
-        the file for risk free return pd.DataFrame.
-    Returns:
-    --------
-    pd.Series:
-        a series for the risk free return with index for date.
+# def read_rf_data(file='data/raw/raw_data.h5'):
+#     """
+#     read the risk free return seires.
+#     Parameters:
+#     -----------
+#     file:
+#         str, default 'data/raw/raw_data.h5'
+#         the file for risk free return pd.DataFrame.
+#     Returns:
+#     --------
+#     pd.Series:
+#         a series for the risk free return with index for date.
 
-    """
+#     """
 
-    ret_f: pd.Series = pd.read_hdf(file, key='ret_Rf').loc[:, 'ret_f']
-    return ret_f
+#     ret_f: pd.Series = pd.read_hdf(file, key='ret_Rf').loc[:, 'ret_f']
+#     return ret_f
 
 
 def add_exc_ret_column(dframe: pd.DataFrame,
@@ -57,8 +58,8 @@ def add_exc_ret_column(dframe: pd.DataFrame,
 @click.argument('output_file', type=click.Path(writable=True))
 def main(output_file):
     # read the files
-    dframe_prepared = rpt.read_prepared_data()
-    risk_free_series = read_rf_data()
+    dframe_prepared = predata.read_prepared_data()
+    risk_free_series = predata.read_rf_data()
 
     # add the excess return column
     dframe_added = add_exc_ret_column(
