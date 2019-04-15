@@ -11,14 +11,17 @@
 ├── data
 │   ├── external
 │   ├── interim
-│   │   ├── prepared_data.h5
+│   │   ├── prepared_data.pickle
 │   │   ├── reverse_port_ret.pickle
 │   │   └── reverse_ret_use_exc.pickle
 │   ├── processed
+│   │   ├── features.pickle
+│   │   └── targets.pickle
 │   └── raw
 │       └── raw_data.h5
 ├── notebooks
 │   ├── explore
+│   │   └── build_featrues.py
 │   └── report
 ├── papy.env
 ├── requirements.txt
@@ -30,7 +33,10 @@
     │   └── reading_csv_to_hdfs.py
     ├── features
     │   ├── __init__.py
-    │   ├── reverse_ext_ret.py
+    │   ├── process_data_api.py
+    │   ├── process_features.py
+    │   ├── process_targets.py
+    │   ├── reverse_exc_ret.py
     │   └── reverse_port_ret.py
     ├── models
     │   └── __init__.py
@@ -49,6 +55,9 @@ data 文件夹用来存储各种数据，目前包括：
   * `reverse_port_ret.pickle`：反转组合收益的时间序列数据
   * `reverse_ret_use_exc.pickle`：使用**超额收益率**计算的反转组合收益率时间序列数据
 * `processed/`： 经过处理后，可以用于建模的数据。
+  * `features.pickle`： 用于OLS 回归时所使用的features
+  * `targets.pickle`：用于OLS 回归时所使用的targets
+  虽然features 和targets 分开存贮，但其长度与index 保证为一致。分开存储是为了保持数据独立，以及避免同日期不同股票保存大量相同的features。 
 * `external/`：一些外部数据
 
 考虑到数据文件的体积，data/ 文件夹中的文件目前暂未上传到GitHub  上，只在本地存有。
@@ -63,6 +72,9 @@ src/ 文件夹保存了处理数据所用的Python 源代码，用于作为modul
 * `features/`： 准备模型features 的脚本合集
   * `reverse_port_ret.py`：生成反转组合收益率所用的一些函数，以及直接作为脚本生成**反转组合**收益的时间序列。脚本生成的数据在`data/interim/reverse_port_ret.pickle`
   * `reverse_ext_ret.py`：生成使用**超额收益率**计算所得的反转组合收益率时间序列数据。生成的数据保存在`reverse_ret_use_exc.pickle`
+  * `process_data_api.py`：用于生成后续建模时需要的`features` 和`targets` 的一些函数和接口，在下面的两个脚本中调用。
+    * `process_features.py`：仅直接用作命令行脚本，调用`process_data_api.py` 中的接口，生成建模所用的`features`，生成的数据保存在`data/processed/features.pickle`
+    * `process_targets.py`：仅直接作用在命令行中调用，使用`process_data_api.py` 中的接口，生成建模所用的`targets`，数据保存在`data/processed/features.pickle`
 * `models`：进行模型建立的脚本
 * `visualization`：用于进行一些可视化操作的脚本
 
