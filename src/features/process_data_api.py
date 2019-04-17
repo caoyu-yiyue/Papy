@@ -1,7 +1,5 @@
 import pandas as pd
-# import click
 from src.data import preparing_data as predata
-# from src.features import reverse_exc_ret as rxr
 
 
 def obtain_feature_index(reverse_ret_dframe: pd.DataFrame):
@@ -60,21 +58,43 @@ def calculate_stds(std_roll_window: int = 20):
     return (rolling_std, delta_std)
 
 
-def generate_features(columns: dict, index: pd.Index):
+def shift_leading_gradually(benchmark: pd.Series,
+                            col_name_prefix: str,
+                            leading_time: int = 5):
     """
-    生成features DataFrame
+    输入一个列benchmark 作为基准，每一行依次添加未来t+1，...，t+leading_time 的值。
+    最终返回一个benchmark 错位后的t+1, ..., t+leading_time 列组成的DataFrame。
+
     Parameters:
     -----------
-    columns:
-        dict
-        features_df 的各个列。输入一个dict 类，key 为列名，value 为列的值。
-    index:
-        pd.Index
-        features_df 的index。主要是用来输入target_df 的Index，使得两个表对齐
+    benchmark:
+        pd.Series
+        需要进行错位的列
+
+    col_name_prefix:
+        str
+        返回的列名的前缀
+
+    leading_time:
+        int, default 5
+        最大的错位时间
+
+    Returns:
+    --------
+    pd.DataFrame
+        benchmark 错位后，以t+1，...,t+leading_time 为列组成的数据框
     """
 
-    features_df = pd.DataFrame(data=columns, index=index)
-    return features_df
+    dframe_added_leading = pd.DataFrame()
+
+    # 以benchmark 分别向前错位1，2，...，leading_time，然后组合到同一个DataFrame 中
+    for index in range(1, (leading_time + 1)):
+        # 每一天后面需要追加一个t+1,...,leading_time, 所以shift 中使用负的的index 值进行错位
+        shifted_serie = benchmark.shift(-index)
+        dframe_added_leading[col_name_prefix +
+                             '_t+{}'.format(index)] = shifted_serie
+
+    return dframe_added_leading
 
 
 def generate_targets(reverse_ret_dframe: pd.DataFrame):
@@ -105,40 +125,39 @@ def generate_targets(reverse_ret_dframe: pd.DataFrame):
     return target_df
 
 
-def read_features_data(file='data/processed/features.pickle'):
+def get_rm_features(file='data/processed/rm_features.pickle'):
+    """
+    从保存的文件中读取市场超额收益率features（市场超额收益率的t+1,...t+5 期）
+    """
     dframe = pd.read_pickle(file)
     return dframe
 
 
-def read_targets_data(file='data/processed/targets.pickle'):
+def _get_std_features_dframe(file='data/processed/std_features.pickle'):
+    """
+    从保存的文件中读取波动率、波动率变动未来五期值组成的features 数据框。
+    """
     dframe = pd.read_pickle(file)
     return dframe
 
 
-# @click.command()
-# @click.argument('features_path', type=click.Path(writable=True))
-# @click.argument('targets_path', type=click.Path(writable=True))
-# def main(features_path, targets_path):
-#     # 读取使用**超额收益率** 计算的反转组合收益数据框，并取出时间index
-#     reverse_ret_dframe: pd.Series = rxr.read_reverse_exc_data()
-#     year_index: pd.Series = obtain_feature_index(reverse_ret_dframe)
+def get_rolling_std_features(file='data/processed/std_features.pickle'):
+    """
+    从保存的波动率features 文件中，获得滚动波动率（roling_std）这一项
+    """
+    std_dframe = pd.read_pickle(file)
+    return std_dframe['rolling_std']
 
-#     # 计算市场超额收益率、历史波动率、历史波动率的差值
-#     market_ret_exc: pd.Series = calcualte_market_exc_ret()
-#     rolling_std, delta_std = calculate_stds()
 
-#     # 使用以上三列形成features 数据框
-#     features_df = generate_features(
-#         columns={
-#             'rm_exc': market_ret_exc,
-#             'rolling_std': rolling_std,
-#             'delta_std': delta_std
-#         },
-#         index=year_index)
-#     features_df.to_pickle(features_path)
-#     print('features_df done.')
+def get_delta_std_features(file='data/processed/std_features.pickle'):
+    """
+    从保存的波动率features 文件中，获得五列波动率变动（delta_std）的数据列
+    """
+    std_dframe = pd.read_pickle(file)
+    delta_std_col = [col for col in std_dframe if col.startswith('delta_')]
+    return std_dframe[delta_std_col]
 
-#     # 使用反转组合收益数据，形成target 数据框
-#     target_df = generate_targets(reverse_ret_dframe)
-#     target_df.to_pickle(targets_path)
-#     print('targets_df done.')
+
+def get_targets(file='data/processed/targets.pickle'):
+    dframe = pd.read_pickle(file)
+    return dframe

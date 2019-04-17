@@ -1,5 +1,5 @@
 # set .PHONY
-.PHONY: all clean build_from_h5
+.PHONY: all clean build_from_h5 features
 
 # clean all generated file
 clean:
@@ -24,8 +24,8 @@ data/interim/reverse_ret_use_exc.pickle: data/interim/prepared_data.pickle
 	python3 src/features/reverse_exc_ret.py $@
 
 # process OLS features and targets data frame
-data/processed/features.pickle: data/interim/reverse_ret_use_exc.pickle
-	python3 src/features/process_features.py $< $@
+features: data/interim/reverse_ret_use_exc.pickle
+	python3 src/features/process_features.py $< data/processed/rm_features.pickle data/processed/std_features.pickle
 
 data/processed/targets.pickle: data/interim/reverse_ret_use_exc.pickle
 	python3 src/features/process_targets.py $< $@
