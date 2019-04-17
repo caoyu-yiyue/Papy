@@ -23,15 +23,21 @@ data/interim/reverse_port_ret.pickle: data/interim/prepared_data.pickle
 data/interim/reverse_ret_use_exc.pickle: data/interim/prepared_data.pickle
 	python3 src/features/reverse_exc_ret.py $@
 
+# process OLS rm_features data frame
+data/processed/rm_features.pickle: data/interim/reverse_ret_use_exc.pickle
+	python3 src/features/process_features.py --rmfeatures $@ $<
+
+# process OLS std_features data frame
+data/processed/std_features.pickle: data/interim/reverse_ret_use_exc.pickle
+	python3 src/features/process_features.py --stdfeatures $@ $<
+
 # process OLS features and targets data frame
-features: data/interim/reverse_ret_use_exc.pickle
-	python3 src/features/process_features.py $< data/processed/rm_features.pickle data/processed/std_features.pickle
+features: data/processed/rm_features.pickle data/processed/std_features.pickle
 
 data/processed/targets.pickle: data/interim/reverse_ret_use_exc.pickle
 	python3 src/features/process_targets.py $< $@
 
 build_from_h5: data/interim/prepared_data.pickle data/interim/reverse_port_ret.pickle\
-data/interim/reverse_ret_use_exc.pickle data/processed/features.pickle\
-data/processed/targets.pickle
+data/interim/reverse_ret_use_exc.pickle features data/processed/targets.pickle
 
 all: data/raw/raw_data.h5 build_from_h5

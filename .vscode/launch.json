@@ -13,6 +13,16 @@
             "envFile": "${workspaceFolder}/papy.env"
         },
         {
+            "name": "Python: Process features",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "envFile": "${workspaceFolder}/papy.env",
+            "args": ["--rmfeatures", "data/processed/rm_features.pickle",
+                "data/interim/reverse_ret_use_exc.pickle"]
+        },
+        {
             "name": "Python: Remote Attach",
             "type": "python",
             "request": "attach",
