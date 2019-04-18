@@ -5,21 +5,13 @@ from src.features import process_data_api as proda
 from statsmodels.regression import linear_model
 
 # %%
-features_df: pd.DataFrame = proda.read_features_data()
-target_df: pd.DataFrame = proda.read_targets_data()
+rm_features: pd.DataFrame = proda.get_rm_features()
+target_df: pd.DataFrame = proda.get_targets()
 
 # %%
 # 某一组反转组合的OLS 回归测试
 # 以'Small', 'Lo-Hi' 为Y，市场超额收益率为X
 # target = target_df.xs(('Small', 'Lo-Hi'), level=[1, 2])
-
-# 循环出五个市场超额收益率
-rm_exc = features_df['rm_exc']
-features = pd.DataFrame()
-for index in range(1, 6):
-    # 每一天后面需要追加一个t + 1,...,5, 所以shift 中使用负的的index 值进行错位
-    x = rm_exc.shift(-index)
-    features['rm_exc_t+{}'.format(index)] = x
 
 # %%
 # ols
@@ -37,7 +29,7 @@ for index in range(1, 6):
 # %%
 # 为target 分组，features 加入常数
 target_grouped = target_df.groupby(['cap_group', 'rev_group'], as_index=False)
-features = linear_model.add_constant(features)
+features = linear_model.add_constant(rm_features)
 
 # %%
 # 对每个组进行回归模型的设定
