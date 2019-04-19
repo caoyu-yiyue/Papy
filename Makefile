@@ -1,5 +1,5 @@
 # set .PHONY
-.PHONY: all clean build_from_h5 features
+.PHONY: all clean build_from_h5 features ols_models
 
 # clean all generated file
 clean:
@@ -36,6 +36,27 @@ features: data/processed/rm_features.pickle data/processed/std_features.pickle
 
 data/processed/targets.pickle: data/interim/reverse_ret_use_exc.pickle
 	python3 src/features/process_targets.py $< $@
+
+# contruct ols models data frame
+# ols with market excess return
+models/ols_with_market_ret.pickle: data/processed/rm_features.pickle data/processed/targets.pickle
+	python3 src/models/ols_model.py --featurestype market_ret $@
+
+# ols with rolling std
+models/ols_with_rolling_std.pickle: data/processed/std_features.pickle data/processed/targets.pickle
+	python3 src/models/ols_model.py --featurestype rolling_std $@
+
+# ols with delta_std
+models/ols_with_delta_std.pickle: data/processed/std_features.pickle data/processed/targets.pickle
+	python3 src/models/ols_model.py --featurestype delta_std $@
+
+# ols with delta_std and market return
+models/ols_with_delta_std_and_rm.pickle: data/processed/std_features.pickle data/processed/targets.pickle
+	python3 src/models/ols_model.py --featurestype delta_std_and_rm $@
+
+# all ols models
+ols_models: models/ols_with_market_ret.pickle models/ols_with_rolling_std.pickle \
+models/ols_with_delta_std.pickle models/ols_with_delta_std_and_rm.pickle
 
 build_from_h5: data/interim/prepared_data.pickle data/interim/reverse_port_ret.pickle\
 data/interim/reverse_ret_use_exc.pickle features data/processed/targets.pickle

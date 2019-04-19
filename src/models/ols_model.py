@@ -21,13 +21,13 @@ def select_features(features_type: str):
     返回的features 数据框
     """
 
-    if features_type == 'rm':
+    if features_type == 'market_ret':
         features = proda.get_rm_features()
     elif features_type == 'rolling_std':
         features = proda.get_rolling_std_features()
     elif features_type == 'delta_std':
         features = proda.get_delta_std_features()
-    elif features_type == 'delta_std&rm':
+    elif features_type == 'delta_std_and_rm':
         # 指定该类型时，使用未来的市场收益率数据、合并上未来的波动率变动数据，一起返回
         rm_features: pd.DataFrame = proda.get_rm_features()
         delta_std = proda.get_delta_std_features()
@@ -91,6 +91,7 @@ def read_ols_results_df(ols_features_type: str):
     ols_features_type:
         str
         指定想要读取的OLS 模型建立时使用的features 类型
+        包括market_ret, rolling_std, delta_std, delta_std_and_rm
 
     Results:
     --------
@@ -98,16 +99,18 @@ def read_ols_results_df(ols_features_type: str):
         相应的ols_features_type 生成的一组OLS Results 数据框
     """
 
-    file_path = 'model/' + ols_features_type + '_featured_ols_fitted.pickle'
+    file_path = 'models/ols_with_' + ols_features_type + '.pickle'
     return pd.read_pickle(file_path)
 
 
 @click.command()
 @click.option(
     '--featurestype',
-    type=click.Choice(['rm', 'rolling_std', 'delta_std', 'delta_std&rm']),
+    type=click.Choice(
+        ['market_ret', 'rolling_std', 'delta_std', 'delta_std_and_rm']),
     help='select the features\' type being to use')
-def main(featurestype):
+@click.argument('output_file', type=click.Path(writable=True))
+def main(featurestype, output_file):
     """
     使用不同的features，对超额收益率计算的反转组合收益，进行OLS 回归。
     最终将不同组（规模 * 反转策略）的OLS 回归结果组成的pd.DataFrame 保存，
@@ -118,7 +121,7 @@ def main(featurestype):
     featurestype:
         str
         进行OLS 模型设定时，使用的features 的类型
-        如[rm, rolling_std, delta_std, delta_std&rm]
+        如[market_ret, rolling_std, delta_std, delta_std_and_rm]
     """
 
     # 获取到targets 和features
@@ -131,8 +134,7 @@ def main(featurestype):
         ols_setting, features=features)
     models_trained: pd.DataFrame = models_setted.applymap(ols_train)
 
-    path_to_save = 'models/' + featurestype + '_featured_ols_results.pickle'
-    models_trained.to_pickle(path_to_save)
+    models_trained.to_pickle(output_file)
 
 
 if __name__ == "__main__":

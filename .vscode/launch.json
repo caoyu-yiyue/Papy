@@ -23,6 +23,16 @@
                 "data/interim/reverse_ret_use_exc.pickle"]
         },
         {
+            "name": "Python: ols models",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "envFile": "${workspaceFolder}/papy.env",
+            "args": ["--featurestype", "market_ret",
+                "models/ols_with_market_ret.pickle"]
+        },
+        {
             "name": "Python: Remote Attach",
             "type": "python",
             "request": "attach",
