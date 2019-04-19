@@ -1,3 +1,7 @@
+"""
+一些生成OLS 回归的features 和targets 所用的函数。
+"""
+
 import pandas as pd
 from src.data import preparing_data as predata
 
@@ -10,8 +14,10 @@ def obtain_feature_index(reverse_ret_dframe: pd.DataFrame):
     reverse_ret_dframe:
         pd.DataFrame
         保存有反转组合收益的数据框，下一步作为ols 的Target 使用
+
+    Results:
     --------
-    Index:
+    pandas.Index:
         一列与输入的数据框的Trddt 相同的index
     """
 
@@ -23,7 +29,7 @@ def obtain_feature_index(reverse_ret_dframe: pd.DataFrame):
 def calcualte_market_exc_ret():
     """
     计算市场超额收益率序列
-    Returns:
+    Results:
         pd.Series
         市场超额收益率序列
     """
@@ -42,7 +48,7 @@ def calculate_stds(std_roll_window: int = 20):
     std_roll_window:
         int
         滚动计算标准差时，选用的滚动窗口日期
-    Returns:
+    Results:
     --------
     tuple:
         返回一个tuple，第0 个值为滚动标准差，第1 个值为标准差的变动值（查分值）
@@ -79,7 +85,7 @@ def shift_leading_gradually(benchmark: pd.Series,
         int, default 5
         最大的错位时间
 
-    Returns:
+    Results:
     --------
     pd.DataFrame
         benchmark 错位后，以t+1，...,t+leading_time 为列组成的数据框
@@ -106,7 +112,7 @@ def generate_targets(reverse_ret_dframe: pd.DataFrame):
         pd.DataFrame
         反转组合收益率的时间序列表格，index 为时间和规模，columns 为不同反转策略（如Lo-Hi)
 
-    Returns:
+    Results:
     --------
     pd.DataFrame
         用于OLS 回归的数据框，index 为时间、规模组、反转策略，columns 为收益率
@@ -128,7 +134,18 @@ def generate_targets(reverse_ret_dframe: pd.DataFrame):
 def get_rm_features(file='data/processed/rm_features.pickle'):
     """
     从保存的文件中读取市场超额收益率features（市场超额收益率的t+1,...t+5 期）
+    Parameters:
+    -----------
+    file:
+        str(path for rm_features file)
+        保存rm_features 的文件路径
+
+    Results:
+    --------
+    pandas.DataFrame:
+        未来五日市场超额收益率组成的一个pandas.DataFrame
     """
+
     dframe = pd.read_pickle(file)
     return dframe
 
@@ -136,7 +153,18 @@ def get_rm_features(file='data/processed/rm_features.pickle'):
 def _get_std_features_dframe(file='data/processed/std_features.pickle'):
     """
     从保存的文件中读取波动率、波动率变动未来五期值组成的features 数据框。
+    Parameters:
+    -----------
+    file:
+        str(path for std_features file)
+        保存有和波动率有关的数据框的路径
+
+    Results:
+    --------
+    pandas.DataFrame:
+        收益率和未来五天波动率变动共同组成的pandas.DataFrame
     """
+
     dframe = pd.read_pickle(file)
     return dframe
 
@@ -144,20 +172,53 @@ def _get_std_features_dframe(file='data/processed/std_features.pickle'):
 def get_rolling_std_features(file='data/processed/std_features.pickle'):
     """
     从保存的波动率features 文件中，获得滚动波动率（roling_std）这一项
+    Parameters:
+    -----------
+    file:
+        str(path to std_feautres file)
+
+    Results:
+    --------
+    pandas.DataFrame:
+        滚动的波动率数据框
     """
+
     std_dframe = pd.read_pickle(file)
-    return std_dframe['rolling_std']
+    return std_dframe['rolling_std'].to_frame()
 
 
 def get_delta_std_features(file='data/processed/std_features.pickle'):
     """
     从保存的波动率features 文件中，获得五列波动率变动（delta_std）的数据列
+    Parameters:
+    -----------
+    file:
+        str(path to std_feautres file)
+
+    Results:
+    --------
+    pandas.DataFrame:
+        未来五天波动率变动值的数据框
     """
+
     std_dframe = pd.read_pickle(file)
     delta_std_col = [col for col in std_dframe if col.startswith('delta_')]
     return std_dframe[delta_std_col]
 
 
 def get_targets(file='data/processed/targets.pickle'):
+    """
+    从保存的文件中读取OLS 回归所用的targets，即超额收益率计算的反转组合收益
+    Parameters:
+    -----------
+    file:
+        str(path to the targets file)
+
+    Results:
+    --------
+    pandas.DataFrame:
+        读取的targets 数据框
+    """
+
     dframe = pd.read_pickle(file)
     return dframe
