@@ -43,7 +43,7 @@ models/ols_with_market_ret.pickle: data/processed/rm_features.pickle data/proces
 	python3 src/models/ols_model.py --featurestype market_ret $@
 
 # ols with rolling std
-models/ols_with_rolling_std.pickle: data/processed/std_features.pickle data/processed/targets.pickle
+models/ols_with_rolling_std_log.pickle: data/processed/std_features.pickle data/processed/targets.pickle
 	python3 src/models/ols_model.py --featurestype rolling_std_log $@
 
 # ols with delta_std
@@ -55,7 +55,7 @@ models/ols_with_delta_std_and_rm.pickle: data/processed/std_features.pickle data
 	python3 src/models/ols_model.py --featurestype delta_std_and_rm $@
 
 # all ols models
-ols_models: models/ols_with_market_ret.pickle models/ols_with_rolling_std.pickle \
+ols_models: models/ols_with_market_ret.pickle models/ols_with_rolling_std_log.pickle \
 models/ols_with_delta_std.pickle models/ols_with_delta_std_and_rm.pickle
 
 build_from_h5: data/interim/prepared_data.pickle data/interim/reverse_port_ret.pickle\
