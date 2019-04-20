@@ -119,7 +119,7 @@ def read_ols_results_df(ols_features_type: str, style: str = 'landscape'):
     elif style == 'landscape':
         # 当为landscape 时，将长表变为横表并返回
         returned_ols_results = ols_results_df.unstack(
-            level='rev_group').reindex(['Small', '2', '3', '4', 'Big'])
+            level='rev_group')
 
     return returned_ols_results
 
@@ -155,7 +155,11 @@ def main(featurestype, output_file):
         ols_setting, features=features)
     models_trained: pd.Series = models_setted.apply(ols_train)
 
-    models_trained.to_pickle(output_file)
+    # reindex the Series for the ols results
+    models_series_reindexed = models_trained.reindex(
+        index=['Small', '2', '3', '4', 'Big'], level=0)
+
+    models_series_reindexed.to_pickle(output_file)
 
 
 if __name__ == "__main__":
