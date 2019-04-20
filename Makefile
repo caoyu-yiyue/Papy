@@ -1,11 +1,27 @@
 # set .PHONY
-.PHONY: all clean build_from_h5 features ols_models
+.PHONY: all clean clean_targets clean_features clean_models\
+ build_from_h5 features ols_models
+
+# clean models' targets
+clean_targets:
+	rm -f models/processed/*targets.pickle
+
+# clean models' feature
+clean_features:
+	rm -f models/processed/*features.pickle
+
+# clean the models results
+clean_models:
+	rm -f models/*.pickle
 
 # clean all generated file
 clean:
 	rm -f data/raw/*.h5
 	rm -f data/interim/*.h5
 	rm -f data/interim/*.pickle
+	rm -f data/processed/*.pickle
+	rm -f data/external/*.pickle
+	clean_models
 
 # read raw csv to hdfs
 data/raw/raw_data.h5:
