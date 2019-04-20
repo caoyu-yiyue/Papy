@@ -133,6 +133,7 @@ def main(featurestype, output_file):
     models_setted: pd.DataFrame = targets_grouped.agg(
         ols_setting, features=features)
     models_trained: pd.DataFrame = models_setted.applymap(ols_train)
+    models_trained.rename(columns={'rev_ret': 'ols_results'}, inplace=True)
 
     models_trained.to_pickle(output_file)
 
