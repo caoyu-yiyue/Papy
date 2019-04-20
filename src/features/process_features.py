@@ -33,10 +33,10 @@ def main(rmfeatures, stdfeatures, input_file):
 
     if stdfeatures is not None:
         # 使用波动率的差值，错位计算出未来t+1,...,t+5 期的列，同时加上一列波动率本身的值，作为features 保存
-        rolling_std, delta_std = proda.calculate_stds()
+        rolling_std_log, delta_std = proda.calculate_stds()
         std_features = proda.shift_leading_gradually(
             delta_std.reindex(year_index), col_name_prefix='delta_std')
-        std_features['rolling_std'] = rolling_std
+        std_features['rolling_std_log'] = rolling_std_log
         std_features.to_pickle(stdfeatures)
 
 

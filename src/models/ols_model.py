@@ -23,7 +23,7 @@ def select_features(features_type: str):
 
     if features_type == 'market_ret':
         features = proda.get_rm_features()
-    elif features_type == 'rolling_std':
+    elif features_type == 'rolling_std_log':
         features = proda.get_rolling_std_features()
     elif features_type == 'delta_std':
         features = proda.get_delta_std_features()
@@ -91,7 +91,7 @@ def read_ols_results_df(ols_features_type: str):
     ols_features_type:
         str
         指定想要读取的OLS 模型建立时使用的features 类型
-        包括market_ret, rolling_std, delta_std, delta_std_and_rm
+        包括market_ret, rolling_std_log, delta_std, delta_std_and_rm
 
     Results:
     --------
@@ -107,7 +107,7 @@ def read_ols_results_df(ols_features_type: str):
 @click.option(
     '--featurestype',
     type=click.Choice(
-        ['market_ret', 'rolling_std', 'delta_std', 'delta_std_and_rm']),
+        ['market_ret', 'rolling_std_log', 'delta_std', 'delta_std_and_rm']),
     help='select the features\' type being to use')
 @click.argument('output_file', type=click.Path(writable=True))
 def main(featurestype, output_file):
@@ -121,7 +121,7 @@ def main(featurestype, output_file):
     featurestype:
         str
         进行OLS 模型设定时，使用的features 的类型
-        如[market_ret, rolling_std, delta_std, delta_std_and_rm]
+        如[market_ret, rolling_std_log, delta_std, delta_std_and_rm]
     """
 
     # 获取到targets 和features

@@ -3,6 +3,7 @@
 """
 
 import pandas as pd
+import numpy as np
 from src.data import preparing_data as predata
 
 
@@ -42,7 +43,7 @@ def calcualte_market_exc_ret():
 
 def calculate_stds(std_roll_window: int = 20):
     """
-    计算以过去std_roll_window 天滚动得到的市场历史波动率，以及相邻两天波动率的变动量
+    计算以过去std_roll_window 天滚动得到的市场历史波动率的对数值，以及相邻两天波动率的变动量
     Parameters:
     -----------
     std_roll_window:
@@ -51,17 +52,18 @@ def calculate_stds(std_roll_window: int = 20):
     Results:
     --------
     tuple:
-        返回一个tuple，第0 个值为滚动标准差，第1 个值为标准差的变动值（查分值）
+        返回一个tuple，第0 个值为滚动标准差的对数值，第1 个值为标准差的变动值（差分值）
     """
 
     # 读取市场指数文件
     market_index: pd.Series = predata.read_market_index_data()
 
-    # 计算历史滚动波动率，以及其查分值（变动情况）
+    # 计算历史滚动波动率，以及其差分值（变动情况）
     rolling_std: pd.Series = market_index.rolling(window=std_roll_window).std()
     delta_std: pd.Series = rolling_std.diff()
+    rolling_std_log: pd.Series = np.log(rolling_std)
 
-    return (rolling_std, delta_std)
+    return (rolling_std_log, delta_std)
 
 
 def shift_leading_gradually(benchmark: pd.Series,
