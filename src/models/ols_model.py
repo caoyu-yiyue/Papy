@@ -82,9 +82,9 @@ def ols_train(model: lm.OLS):
     return fit
 
 
-def read_ols_results_df(ols_features_type: str):
+def read_ols_results_df(ols_features_type: str, style: str = 'landscape'):
     """
-    根据ols_features_type 指定的ols 模型features 类型，返回使用该features 拟合得到了一组OLSRsults
+    根据ols_features_type 指定的ols 模型features 类型，返回使用该features 拟合得到的一组OLSRsults
 
     Parameters:
     -----------
@@ -92,6 +92,11 @@ def read_ols_results_df(ols_features_type: str):
         str
         指定想要读取的OLS 模型建立时使用的features 类型
         包括market_ret, rolling_std_log, delta_std, delta_std_and_rm
+    style:
+        {'landscape', 'portrait'}, default 'landscape'
+        指定返回DataFrame 的样式：
+        'landscape': 返回横表（规模分组做index，反转组合做column）
+        'portrait': 返回长表（规模和反转组合一起，作为MutiIndex）
 
     Results:
     --------
@@ -99,8 +104,24 @@ def read_ols_results_df(ols_features_type: str):
         相应的ols_features_type 生成的一组OLS Results 数据框
     """
 
+    # 断言返回的模式在需要的两种之一
+    assert style in ['portrait', 'landscape'
+                     ], "Ivalid data frame construction {}".format(style)
+
+    # 从保存的文件中读取ols_results DataFrame
     file_path = 'models/ols_with_' + ols_features_type + '.pickle'
-    return pd.read_pickle(file_path)
+    ols_results_df: pd.DataFrame = pd.read_pickle(file_path)
+
+    # 根据style 的要求，返回所需的表格样式
+    if style == 'portrait':
+        # 当为portrait 时，直接返回长表
+        returned_ols_results = ols_results_df
+    elif style == 'landscape':
+        # 当为landscape 时，将长表变为横表并返回
+        returned_ols_results = ols_results_df.unstack(
+            level='rev_group').reindex(['Small', '2', '3', '4', 'Big'])
+
+    return returned_ols_results
 
 
 @click.command()
