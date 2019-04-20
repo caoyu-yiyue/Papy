@@ -25,11 +25,11 @@ data/interim/reverse_ret_use_exc.pickle: data/interim/prepared_data.pickle
 
 # process OLS rm_features data frame
 data/processed/rm_features.pickle: data/interim/reverse_ret_use_exc.pickle
-	python3 src/features/process_features.py --rmfeatures $@ $<
+	python3 src/features/process_features.py --which rm_features $< $@
 
 # process OLS std_features data frame
 data/processed/std_features.pickle: data/interim/reverse_ret_use_exc.pickle
-	python3 src/features/process_features.py --stdfeatures $@ $<
+	python3 src/features/process_features.py --which std_features $< $@
 
 # process OLS features and targets data frame
 features: data/processed/rm_features.pickle data/processed/std_features.pickle

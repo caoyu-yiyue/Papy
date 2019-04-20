@@ -19,8 +19,8 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "envFile": "${workspaceFolder}/papy.env",
-            "args": ["--rmfeatures", "data/processed/rm_features.pickle",
-                "data/interim/reverse_ret_use_exc.pickle"]
+            "args": ["--which", "std_features",
+                "data/interim/reverse_ret_use_exc.pickle", "data/processed/rm_features.pickle"]
         },
         {
             "name": "Python: ols models",
