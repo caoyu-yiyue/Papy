@@ -44,7 +44,7 @@ models/ols_with_market_ret.pickle: data/processed/rm_features.pickle data/proces
 
 # ols with rolling std
 models/ols_with_rolling_std.pickle: data/processed/std_features.pickle data/processed/targets.pickle
-	python3 src/models/ols_model.py --featurestype rolling_std $@
+	python3 src/models/ols_model.py --featurestype rolling_std_log $@
 
 # ols with delta_std
 models/ols_with_delta_std.pickle: data/processed/std_features.pickle data/processed/targets.pickle
