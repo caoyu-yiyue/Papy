@@ -120,15 +120,12 @@ def generate_targets(reverse_ret_dframe: pd.DataFrame):
         用于OLS 回归的数据框，index 为时间、规模组、反转策略，columns 为收益率
     """
 
-    # 按照所有的index 分组
-    grouped_df = reverse_ret_dframe.groupby(reverse_ret_dframe.index.names)
-
-    # 每组去掉index 后转置
-    target_df = grouped_df.apply(lambda df: df.reset_index(drop=True).T)
+    target_series: pd.Series = reverse_ret_dframe.stack()
 
     # 为target_df 数据框的index 和列命名
-    target_df.rename_axis(['Trddt', 'cap_group', 'rev_group'], inplace=True)
-    target_df.rename(columns={0: 'rev_ret'}, inplace=True)
+    target_series.rename_axis(['Trddt', 'cap_group', 'rev_group'],
+                              inplace=True)
+    target_df = target_series.to_frame(name='rev_ret')
 
     return target_df
 
