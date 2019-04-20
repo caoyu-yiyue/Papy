@@ -13,7 +13,7 @@ def main(input_file, output_file):
     # 使用反转组合收益数据，形成target 数据框
     target_df = proda.generate_targets(reverse_ret_dframe)
     target_df.to_pickle(output_file)
-    print('targets_df done.')
+    print('targets_series done.')
 
 
 if __name__ == "__main__":

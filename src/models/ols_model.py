@@ -146,15 +146,14 @@ def main(featurestype, output_file):
     """
 
     # 获取到targets 和features
-    targets_dframe: pd.DataFrame = proda.get_targets()
+    targets_series: pd.Series = proda.get_targets()
     features = select_features(features_type=featurestype)
 
     # 对targets 进行分组后，分别与features 进行OLS 模型设定，并在接下来进行拟合
-    targets_grouped = targets_dframe.groupby(['cap_group', 'rev_group'])
-    models_setted: pd.DataFrame = targets_grouped.agg(
+    targets_grouped = targets_series.groupby(['cap_group', 'rev_group'])
+    models_setted: pd.Series = targets_grouped.agg(
         ols_setting, features=features)
-    models_trained: pd.DataFrame = models_setted.applymap(ols_train)
-    models_trained.rename(columns={'rev_ret': 'ols_results'}, inplace=True)
+    models_trained: pd.Series = models_setted.apply(ols_train)
 
     models_trained.to_pickle(output_file)
 

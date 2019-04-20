@@ -107,7 +107,7 @@ def shift_leading_gradually(benchmark: pd.Series,
 
 def generate_targets(reverse_ret_dframe: pd.DataFrame):
     """
-    从反转收益组合数据，生成用于OLS 分组回归的targets 数据框
+    从反转收益组合数据，生成用于OLS 分组回归的targets 一列Series
     Parameters:
     -----------
     reverse_ret_dframe:
@@ -116,18 +116,17 @@ def generate_targets(reverse_ret_dframe: pd.DataFrame):
 
     Results:
     --------
-    pd.DataFrame
-        用于OLS 回归的数据框，index 为时间、规模组、反转策略，columns 为收益率
+    pd.Series
+        用于OLS 回归的Series，index 为时间、规模组、反转策略
     """
 
     target_series: pd.Series = reverse_ret_dframe.stack()
 
-    # 为target_df 数据框的index 和列命名
+    # 为target_df 数据框的index 和命名
     target_series.rename_axis(['Trddt', 'cap_group', 'rev_group'],
                               inplace=True)
-    target_df = target_series.to_frame(name='rev_ret')
 
-    return target_df
+    return target_series
 
 
 def get_rm_features(file='data/processed/rm_features.pickle'):
