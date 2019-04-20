@@ -43,17 +43,12 @@ fit_on_rm: pd.Series = ols_on_rm.apply(
     lambda model: model.fit(cov_type='HAC', cov_kwds={'maxlags': 5}))
 
 # %%
-# 取出回归后的alpha 值，同时去掉一个没用的index 名字
+# 取出回归后的alpha 值
 alpha_series = fit_on_rm.apply(lambda fit: fit.params['const'])
-alpha_series.rename_axis(index={'rev_group': None}, inplace=True)
+# alpha_series.rename_axis(index={'rev_group': None}, inplace=True)
 alpha_series.head()
 
 # %%
-# 将上面的alpha series 转置成表格
-alpha_reverse = alpha_series.groupby('cap_group').apply(
-    lambda df: df.droplevel(0).to_frame().T).droplevel(1)
-alpha_reverse.set_axis(
-    pd.CategoricalIndex(
-        alpha_reverse.index, categories=['Small', '2', '3', '4', 'Big']),
-    inplace=True)
-alpha_reverse.sort_index()
+# 长表转置为表格，并对index 排序
+alpha_series.unstack(level='rev_group').reindex(
+    ['Small', '2', '3', '4', 'Big'])
