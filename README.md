@@ -20,6 +20,11 @@
 │   │   └── targets.pickle
 │   └── raw
 │       └── raw_data.h5
+├── models
+│   ├── ols_with_delta_std.pickle
+│   ├── ols_with_delta_std_and_rm.pickle
+│   ├── ols_with_market_ret.pickle
+│   └── ols_with_rolling_std_log.pickle
 ├── notebooks
 │   ├── explore
 │   │   ├── build_featrues.py
@@ -41,7 +46,8 @@
     │   ├── reverse_exc_ret.py
     │   └── reverse_port_ret.py
     ├── models
-    │   └── __init__.py
+    │   ├── __init__.py
+    │   └── ols_model.py
     └── visualization
         └── __init__.py
 ```
@@ -65,6 +71,15 @@ data 文件夹用来存储各种数据，目前包括：
 
 考虑到数据文件的体积，data/ 文件夹中的文件目前暂未上传到GitHub  上，只在本地存有。
 
+## models/
+
+保存了OLS 模型的拟合结果。由于使用了分组回归，所以这些结果保存在一个pandas.DataFrame 中。目前保存的结果包括：
+
+* `ols_with_market_ret.pickle`：使用市场超额收益率作为OLS features 的OLS 模型结果
+* `ols_with_rolling_std_log.pickle`：使用滚动波动率作为OLS features 的OLS 模型结果
+* `ols_with_delta_std.pickle`：使用波动率变动作为OLS features 的OLS features 的OLS 模型结果
+* `ols_with_delta_std_and_rm.pickle`：使用波动率变动和市场超额收益率作为features 的OLS 模型结果
+
 ## src/
 
 src/ 文件夹保存了处理数据所用的Python 源代码，用于作为module 在notebooks 或其他脚本中使用，或直接作为脚本进行自动化执行（生成所需数据等）。
@@ -81,6 +96,7 @@ src/ 文件夹保存了处理数据所用的Python 源代码，用于作为modul
     * `--stdfeatures`，生成波动率相关的`features`，包括一个滚动波动率，和五个未来五天的波动率变动值。生成的数据保存在`data/processed/std_features.pickle`
   * `process_targets.py`：仅直接作用在命令行中调用，使用`process_data_api.py` 中的接口，生成建模所用的`targets`，数据保存在`data/processed/features.pickle`
 * `models`：进行模型建立的脚本
+  * `ols_model.py`：进行OLS 模型计算的一些函数，计算获得的OlS 模型结果组成的数据框保存在根目录下的`models/`文件夹下。
 * `visualization`：用于进行一些可视化操作的脚本
 
 ## notebooks/
