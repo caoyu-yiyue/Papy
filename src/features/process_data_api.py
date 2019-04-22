@@ -100,7 +100,7 @@ def shift_leading_gradually(benchmark: pd.Series,
         # 每一天后面需要追加一个t+1,...,leading_time, 所以shift 中使用负的的index 值进行错位
         shifted_serie = benchmark.shift(-index)
         dframe_added_leading[col_name_prefix +
-                             '_t+{}'.format(index)] = shifted_serie
+                             '_t_{}'.format(index)] = shifted_serie
 
     return dframe_added_leading
 
