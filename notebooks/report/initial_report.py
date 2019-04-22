@@ -44,8 +44,9 @@ ols_on_delta_std.applymap(lambda ols_result: ols_result.params[1:].sum())
 
 # %%
 # p 值
-# ols_on_delta_std.applymap(
-# lambda ols_result: ols_result.pvalues['const'].round(4))
+ols_on_delta_std.applymap(
+    lambda ols_result: ols_result.t_test('delta_std_t_1 + delta_std_t_2 + delta_std_t_3 + delta_std_t_4\
+     + delta_std_t_5 = 0').pvalue.item())
 
 # %% [markdown]
 # 使用delta_std 进行回归的同时，控制住市场超额收益
@@ -55,3 +56,9 @@ ols_on_delta_std_and_rm: pd.DataFrame = olsm.read_ols_results_df(
     'delta_std_and_rm')
 ols_on_delta_std_and_rm.applymap(
     lambda ols_result: ols_result.params[6:].sum())
+
+# %%
+# p 值
+ols_on_delta_std_and_rm.applymap(
+    lambda ols_result: ols_result.t_test('delta_std_t_1 + delta_std_t_2 + delta_std_t_3 + delta_std_t_4\
+     + delta_std_t_5 = 0').pvalue.item())
