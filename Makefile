@@ -4,11 +4,11 @@
 
 # clean models' targets
 clean_targets:
-	rm -f models/processed/*targets.pickle
+	rm -f data/processed/*targets.pickle
 
 # clean models' feature
 clean_features:
-	rm -f models/processed/*features.pickle
+	rm -f data/processed/*features.pickle
 
 # clean the models results
 clean_models:
