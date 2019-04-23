@@ -118,10 +118,24 @@ def read_ols_results_df(ols_features_type: str, style: str = 'landscape'):
         returned_ols_results = ols_results_df
     elif style == 'landscape':
         # 当为landscape 时，将长表变为横表并返回
-        returned_ols_results = ols_results_df.unstack(
-            level='rev_group')
+        returned_ols_results = ols_results_df.unstack(level='rev_group')
 
     return returned_ols_results
+
+
+def ols_for_grouped(target_series: pd.Series, features_df: pd.DataFrame):
+
+    # 对targets 进行分组后，分别与features 进行OLS 模型设定，并在接下来进行拟合
+    targets_grouped = target_series.groupby(['cap_group', 'rev_group'])
+    models_setted: pd.Series = targets_grouped.agg(
+        ols_setting, features=features_df)
+    models_trained: pd.Series = models_setted.apply(ols_train)
+
+    # reindex the Series for the ols results
+    models_series_reindexed = models_trained.reindex(
+        index=['Small', '2', '3', '4', 'Big'], level=0)
+
+    return models_series_reindexed
 
 
 @click.command()
@@ -147,19 +161,13 @@ def main(featurestype, output_file):
 
     # 获取到targets 和features
     targets_series: pd.Series = proda.get_targets()
-    features = select_features(features_type=featurestype)
+    features: pd.DataFrame = select_features(features_type=featurestype)
 
-    # 对targets 进行分组后，分别与features 进行OLS 模型设定，并在接下来进行拟合
-    targets_grouped = targets_series.groupby(['cap_group', 'rev_group'])
-    models_setted: pd.Series = targets_grouped.agg(
-        ols_setting, features=features)
-    models_trained: pd.Series = models_setted.apply(ols_train)
+    # 调用对整个targets 序列进行分组回归的函数
+    ols_results_df = ols_for_grouped(targets_series, features)
 
-    # reindex the Series for the ols results
-    models_series_reindexed = models_trained.reindex(
-        index=['Small', '2', '3', '4', 'Big'], level=0)
-
-    models_series_reindexed.to_pickle(output_file)
+    # 保存结果
+    ols_results_df.to_pickle(output_file)
 
 
 if __name__ == "__main__":
