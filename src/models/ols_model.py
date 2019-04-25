@@ -123,10 +123,34 @@ def read_ols_results_df(ols_features_type: str, style: str = 'landscape'):
     return returned_ols_results
 
 
-def ols_for_grouped(target_series: pd.Series, features_df: pd.DataFrame):
+def ols_for_grouped(target_series: pd.Series,
+                    features_df: pd.DataFrame,
+                    target_groupby_col=['cap_group', 'rev_group']):
+    """
+    对targets_series 按照target_groupby_col 进行分组后，对features 进行ols 回归。
+
+    Parameters:
+    -----------
+    target_series:
+        pandas.Series
+        进行回归使用的target, 其中应包含groupby_col 所指定的column 或index
+
+    features_df:
+        pandas.DataFrame
+        进行回归使用的features
+
+    target_groupby_col:
+        str or list of str, default ['cap_group', 'rev_group']
+        对targets 进行分组时依据的column 或index 名
+
+    Returns:
+    --------
+    pandas.DataFrame
+        一个每一个对象都是statasmodels.regressions.liner_models.OLSResults 的数据框
+    """
 
     # 对targets 进行分组后，分别与features 进行OLS 模型设定，并在接下来进行拟合
-    targets_grouped = target_series.groupby(['cap_group', 'rev_group'])
+    targets_grouped = target_series.groupby(target_groupby_col)
     models_setted: pd.Series = targets_grouped.agg(
         ols_setting, features=features_df)
     models_trained: pd.Series = models_setted.apply(ols_train)
