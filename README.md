@@ -28,8 +28,10 @@
 ├── notebooks
 │   ├── explore
 │   │   ├── build_featrues.py
-│   │   └── ols.py
+│   │   ├── ols.py
+│   │   └── t_test_for_sum_coef.py
 │   └── report
+│       └── initial_report.py
 ├── papy.env
 ├── requirements.txt
 └── src
@@ -106,7 +108,9 @@ src/ 文件夹保存了处理数据所用的Python 源代码，用于作为modul
 * `explore/`：用于数据探索的jupyter notebook（转换并保存为python 脚本）
   * `build_features.py`：用于探索生成OLS 模型features 和targets 等数据的notebook。
   * `ols.py`：用于探索OLS 建模过程的notebook。
+  * `t_test_for_sum_coef.py`：用于探索`statsmodels` 中对于参数和的t 检验，与手动更改回归式将参数和放入时结果相同。
 * `report`：用于报告的jupyter notebook
+  * `initial_report.py`：第一步结论的初始报告。这里包括了超额收益计算的反转收益率对市场超额收益、对数化的历史滚动波动率、滚动波动率的日间变动值、波动的日间变动值控制市场超额收益这四种features，进行回归后的结果。
 
 ## 其他文件
 
