@@ -9,12 +9,19 @@ from src.data import preparing_data as predata
 #     return dframe
 
 
-def normalize_ret_rolling_past(df: pd.DataFrame,
-                               window: int,
-                               ret_column: str = 'log_ret',
-                               groupby_column: str = 'Stkcd'):
+@numba.jit
+def _normalize_last(serie):
+    return (serie[-1] - serie.mean()) / serie.std()
+
+
+def backward_rolling_apply(df: pd.DataFrame,
+                           window: int,
+                           method,
+                           calcu_column: str = 'log_ret',
+                           groupby_column: str = 'Stkcd'):
     """
-    传入一个pandas.DataFrame 对象，对其中的一列收益率以过去的window 区间为窗口做滚动标准化。
+    传入一个pandas.DataFrame 对象，对其中的calcu_column 列以过去的window 区间为窗口，
+    滚动进行method 函数的计算。
 
     Parameters
     ----------
@@ -22,8 +29,11 @@ def normalize_ret_rolling_past(df: pd.DataFrame,
         输入的pandas.DataFrame 对象
     window:
         滚动窗口长度
-    ret_column:
-        需要进行标准化的收益率列
+    method:
+        funtcion
+        每个滚动窗口中进行计算使用的函数。
+    calcu_column:
+        需要进行计算的列
     groupby_column:
         分组依据的列。例如按股票代码分组。
 
@@ -34,17 +44,13 @@ def normalize_ret_rolling_past(df: pd.DataFrame,
         每组的前(window - 1) 个位置为NaN。
     """
 
-    print('Calculating the past window normalized return for column \'{}\'...'.
-          format(ret_column))
+    print('Calculating the past window using ' + method.__name__ +
+          ' column \'{}\'...'.format(calcu_column))
 
-    @numba.jit
-    def _normalize_ret(serie):
-        return (serie[-1] - serie.mean()) / serie.std()
-
-    normalized_ret_serie: pd.Series = df.loc[:, ret_column].groupby(
+    applied_series: pd.Series = df.loc[:, calcu_column].groupby(
         level=groupby_column, group_keys=False).rolling(window=window).apply(
-            _normalize_ret, raw=True)
-    return normalized_ret_serie
+            method, raw=True)
+    return applied_series
 
 
 @numba.jit
@@ -261,6 +267,7 @@ def reverse_port_ret_aver(df: pd.DataFrame,
 def reverse_port_ret_quick(dframe: pd.DataFrame,
                            backward_window: int = 60,
                            forward_window: int = 5,
+                           backward_method=_normalize_last,
                            forward_method=_cumulative_ret,
                            col_for_backward_looking: str = 'log_ret',
                            col_for_forward_looking: str = 'Dretwd'):
@@ -287,8 +294,11 @@ def reverse_port_ret_quick(dframe: pd.DataFrame,
         一个按时间和市值组别为index，反转组合标示（如Lo-Hi）为column 的数据框
     """
     # add a column for normaliezed return
-    dframe['norm_ret'] = normalize_ret_rolling_past(
-        df=dframe, window=backward_window, ret_column=col_for_backward_looking)
+    dframe['norm_ret'] = backward_rolling_apply(
+        df=dframe,
+        window=backward_window,
+        method=backward_method,
+        ret_column=col_for_backward_looking)
 
     # add a column for cumulative return for each stosk
     dframe['cum_ret'] = forward_rolling_apply(
