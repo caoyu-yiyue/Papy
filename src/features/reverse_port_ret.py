@@ -4,7 +4,6 @@ import numba
 import click
 from src.data import preparing_data as predata
 
-
 # def read_prepared_data(file='data/interim/prepared_data.h5'):
 #     dframe = pd.read_hdf(file)
 #     return dframe
@@ -48,13 +47,22 @@ def normalize_ret_rolling_past(df: pd.DataFrame,
     return normalized_ret_serie
 
 
-def cumulative_ret_rolling_forward(df: pd.DataFrame,
-                                   window: int,
-                                   ret_column: str = 'Dretwd',
-                                   groupby_column: str = 'Stkcd',
-                                   shift: int = 2):
+@numba.jit
+def _cumulative_ret(ndarray: np.ndarray):
     """
-    计算pd.DataFrame 对象某一列，针对长度为window 的窗口期内滚动的累积收益率。
+    计算ndarray 的累积收益率的函数。
+    """
+    return (ndarray + 1).prod() - 1
+
+
+def forward_rolling_apply(df: pd.DataFrame,
+                          window: int,
+                          method,
+                          calcu_column: str = 'Dretwd',
+                          groupby_column: str = 'Stkcd',
+                          shift: int = 2):
+    """
+    计算pd.DataFrame 对象某一列，在长度为window 的每个窗口期内进行method 函数的计算。
 
     Parameters:
     -----------
@@ -63,38 +71,36 @@ def cumulative_ret_rolling_forward(df: pd.DataFrame,
         进行计算的DataFrame 对象
     window:
         int
-        计算累积收益率的窗口期长度
-    ret_column:
+        进行滚动的窗口期长度
+    method:
+        function
+        每个滚动窗口中进行计算使用的函数。
+    calcu_column:
         str or list of str 'Dretwd' Default
-        本期收益率列名，即用于滚动计算累计收益率的列
+        传入method 进行计算的列名，即用于滚动计算的数值列
     groupby_column:
         str 'Stkcd' Default
         用于将数据分组的列名。默认为'Stkcd'，即股票代码
     shift:
         int 2 Default
-        位移参数，确定每个时间点，从何时开始累积收益率区间。若shift=0, 从本期开始；shift=1，从下一期开始。
+        位移参数，确定每个时间点，从何时开始累积区间。若shift=0, 从本期开始；shift=1，从下一期开始。
         默认为2，因为项目中在t 期排序，(t + 1) 期开始持有，那么(t + 2) 期的收益率是从第(t + 1) 期持有所得。
 
     Returns:
     --------
     pandas.Series
-        滚动按未来window 计算得到的累积收益率Series。
+        滚动按未来Window 使用method 计算得到的一列Series 结果。
     """
 
-    print(
-        'Calculating the forward window cumulative retrun for column \'{}\'...'
-        .format(ret_column))
-
-    @numba.jit
-    def _cumulative_ret(ndarrary: np.ndarray):
-        return (ndarrary + 1).prod() - 1
+    print('Calculating the forward window using method ' + method.__name__ +
+          ' for column \'{}\'...'.format(calcu_column))
 
     # 由于pandas v0.24.1 还没有向前滚动的接口，这里先将数据倒置过来，然后向后apply 函数，达到目的。
-    reverse_order: pd.Series = df[::-1].loc[:, ret_column]
+    reverse_order: pd.Series = df[::-1].loc[:, calcu_column]
     applied_series: pd.Series = reverse_order.groupby(
         groupby_column, group_keys=False,
         sort=False).shift(shift).rolling(window).apply(
-            _cumulative_ret, raw=True)
+            method, raw=True)
     return applied_series.sort_index(level=df.index.names)
 
 
@@ -255,6 +261,7 @@ def reverse_port_ret_aver(df: pd.DataFrame,
 def reverse_port_ret_quick(dframe: pd.DataFrame,
                            backward_window: int = 60,
                            forward_window: int = 5,
+                           forward_method=_cumulative_ret,
                            col_for_backward_looking: str = 'log_ret',
                            col_for_forward_looking: str = 'Dretwd'):
     """
@@ -284,8 +291,11 @@ def reverse_port_ret_quick(dframe: pd.DataFrame,
         df=dframe, window=backward_window, ret_column=col_for_backward_looking)
 
     # add a column for cumulative return for each stosk
-    dframe['cum_ret'] = cumulative_ret_rolling_forward(
-        df=dframe, window=forward_window, ret_column=col_for_forward_looking)
+    dframe['cum_ret'] = forward_rolling_apply(
+        df=dframe,
+        window=forward_window,
+        method=forward_method,
+        calcu_column=col_for_forward_looking)
 
     # drop na values
     dframe.dropna(inplace=True)
