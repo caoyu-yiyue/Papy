@@ -298,7 +298,7 @@ def reverse_port_ret_quick(dframe: pd.DataFrame,
         df=dframe,
         window=backward_window,
         method=backward_method,
-        ret_column=col_for_backward_looking)
+        calcu_column=col_for_backward_looking)
 
     # add a column for cumulative return for each stosk
     dframe['cum_ret'] = forward_rolling_apply(
