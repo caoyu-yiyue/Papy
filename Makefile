@@ -21,7 +21,7 @@ clean:
 	rm -f data/interim/*.pickle
 	rm -f data/processed/*.pickle
 	rm -f data/external/*.pickle
-	clean_models
+	rm -f models/*.pickle
 
 # read raw csv to hdfs
 data/raw/raw_data.h5:
@@ -75,6 +75,6 @@ ols_models: models/ols_with_market_ret.pickle models/ols_with_rolling_std_log.pi
 models/ols_with_delta_std.pickle models/ols_with_delta_std_and_rm.pickle
 
 build_from_h5: data/interim/prepared_data.pickle data/interim/reverse_port_ret.pickle\
-data/interim/reverse_ret_use_exc.pickle features data/processed/targets.pickle
+data/interim/reverse_ret_use_exc.pickle features data/processed/targets.pickle ols_models
 
 all: data/raw/raw_data.h5 build_from_h5
