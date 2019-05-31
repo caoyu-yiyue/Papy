@@ -13,6 +13,15 @@
             "envFile": "${workspaceFolder}/papy.env"
         },
         {
+            "name": "Python: Reverse portfolie return",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "envFile": "${workspaceFolder}/papy.env",
+            "args": ["data/interim/prepared_data.pickle","data/interim/reverse_port_ret.pickle"]
+        },
+        {
             "name": "Python: Process features",
             "type": "python",
             "request": "launch",
