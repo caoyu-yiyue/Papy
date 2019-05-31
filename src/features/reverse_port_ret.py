@@ -142,10 +142,10 @@ def creat_group_signs(df: pd.Series, column_to_cut: str, groupby_column: str,
         lambda serie: pd.qcut(serie, q=quntiles, labels=labels))
 
 
-def reverse_port_ret_mini(
+def weighted_average_by_group(
         df: pd.DataFrame,
         groupby_columns: list = ['Trddt', 'cap_group', 'ret_group'],
-        ret_column: str = 'cum_ret',
+        calcu_column: str = 'cum_ret',
         weights_column: str = 'dollar_volume'):
     """
     输入一个数据框，计算每天、每个规模组、每个收益组的加权平均回报率。
@@ -159,9 +159,9 @@ def reverse_port_ret_mini(
     groupby_columns:
         list of str, Default ['Trddt', 'cap_group', 'ret_group']
         用于分组的列名。默认为时间、规模组、收益组
-    ret_columns:
+    calcu_columns:
         str, Default 'cum_ret'
-        用于计算加权收益率的列名
+        用于计算加权平均值的列名
     weights_column:
         str, Default 'dollar_volume'
         计算加权平均时的权重
@@ -180,7 +180,7 @@ def reverse_port_ret_mini(
 
     return df.groupby(groupby_columns).apply(
         lambda x: _weighted_mean(
-            x[ret_column].to_numpy(), x[weights_column].to_numpy()))
+            x[calcu_column].to_numpy(), x[weights_column].to_numpy()))
 
 
 def _reverse_port_one(serie: pd.Series):
@@ -327,7 +327,7 @@ def reverse_port_ret_quick(dframe: pd.DataFrame,
         labels=['Lo', '2', '3', '4', '5', '6', '7', '8', '9', 'Hi'])
 
     # portfolie return for every day, cap_group and ret_group
-    portfolie_ret_serie = reverse_port_ret_mini(df=dframe)
+    portfolie_ret_serie = weighted_average_by_group(df=dframe)
 
     # Low group substract high group to form reverse portfolie.
     reverse_ret_time_series: pd.DataFrame = reverse_port_ret_all(
