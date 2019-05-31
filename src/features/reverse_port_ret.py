@@ -183,8 +183,8 @@ def weighted_average_by_group(
             x[calcu_column].to_numpy(), x[weights_column].to_numpy()))
 
 
-def _reverse_port_one(serie: pd.Series):
-    '''
+def combine_low_high(serie: pd.Series, how: str):
+    """
     输入不同标准收益率分组的一列序列，输家-赢家获得反转组合收益
 
     Parameters:
@@ -192,29 +192,39 @@ def _reverse_port_one(serie: pd.Series):
     serie:
     pandas.Series
         一列分组后的收益值，输家在前，赢家在后。（默认情况下，以时间、规模组和收益组为Index）
+    how:
+        str, 'sub' or 'sum'
+        选择结合low, high 组合的方式，'sub' 为low-high，'sum' 为low+high
 
     Returns:
     --------
     list
-        一个包含了len(serie)/ 2 个反转组合收益率的list
-    '''
+        一个包含了len(serie)/ 2 个反转组合结果的list
+    """
     result = []
     for index in range(int(len(serie) / 2)):
         high_group = serie.iloc[9 - index]
         low_group = serie.iloc[index]
-        result.append(low_group - high_group)
+
+        if how == 'sub':
+            result.append(low_group - high_group)
+        elif how == 'sum':
+            result.append(low_group + high_group)
     return result
 
 
-def reverse_port_ret_all(serie: pd.Series):
+def reverse_port_ret_all(serie: pd.Series, combine_style: str):
     """
-    传入port_ret_mini() 计算所得的细分组加权平均收益率序列，计算出所有日期的反转收益率数据框。
+    传入weighted_average_by_group() 计算所得的细分组加权平均收益率序列，计算出所有日期的反转收益率数据框。
 
     Parameters:
     -----------
     serie:
         pandas.Seires
         以时间、规模、收益分组作为MutipleIndex 的pandas.Series
+    combine_style:
+        str
+        用于传入combine_low_high() 所需的how 参数，指定反转组合low 与high 两组组合的方式
 
     Returns:
     --------
@@ -224,9 +234,10 @@ def reverse_port_ret_all(serie: pd.Series):
 
     print('Calculating the reverse portfolie return...')
 
-    # 按照前两组分类，然后每组计算反转收益。
+    # 按照前两组分类，然后每组计算反转组合组成的所需数值。
     grouped_serie = serie.groupby(level=[0, 1])
-    reverse_ret_in_serie: pd.Series = grouped_serie.apply(_reverse_port_one)
+    reverse_ret_in_serie: pd.Series = grouped_serie.apply(
+        combine_low_high, how=combine_style)
     # 将Series of list 转换为DataFrame
     reverse_ret_each_day = pd.DataFrame(
         (item for item in reverse_ret_in_serie),
@@ -270,7 +281,8 @@ def reverse_port_ret_quick(dframe: pd.DataFrame,
                            backward_method=_normalize_last,
                            forward_method=_cumulative_ret,
                            col_for_backward_looking: str = 'log_ret',
-                           col_for_forward_looking: str = 'Dretwd'):
+                           col_for_forward_looking: str = 'Dretwd',
+                           combine_style='sub'):
     """
     将如上计算反转组合收益率的步骤组合在一起，
     快速计算一个按前backward_window 排序，持有forward_window 的反转组合收益时间序列。
@@ -331,7 +343,7 @@ def reverse_port_ret_quick(dframe: pd.DataFrame,
 
     # Low group substract high group to form reverse portfolie.
     reverse_ret_time_series: pd.DataFrame = reverse_port_ret_all(
-        serie=portfolie_ret_serie)
+        serie=portfolie_ret_serie, combine_style=combine_style)
 
     return reverse_ret_time_series
 
