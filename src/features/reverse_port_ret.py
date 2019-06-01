@@ -301,7 +301,29 @@ def reverse_port_ret_quick(dframe: pd.DataFrame,
         int, default 5
         持有期时长，默认为5
 
+    backward_method:
+        function
+        用于向后滚动窗口计算时使用的函数，可传入apply 函数，第一个参数为array like
+
+    forward_method:
+        function
+        用于向前滚动窗口计算时使用的函数，可传入apply 函数，第一个参数为array like
+
+    col_for_backward_looking:
+        str
+        用于向后滚动窗口计算的列名
+
+    col_for_forward_looking:
+        str
+        用于向前滚动窗口计算的列名
+
+    combine_style:
+        str
+        用于指定形成反转组合的方式，'sub' 为low - high，'sum' 为low + high
+
+
     Rerurns:
+    --------
         pd.DataFrame
         一个按时间和市值组别为index，反转组合标示（如Lo-Hi）为column 的数据框
     """
@@ -313,7 +335,7 @@ def reverse_port_ret_quick(dframe: pd.DataFrame,
         calcu_column=col_for_backward_looking)
 
     # add a column for cumulative return for each stosk
-    dframe['cum_ret'] = forward_rolling_apply(
+    dframe['forward_cum_col'] = forward_rolling_apply(
         df=dframe,
         window=forward_window,
         method=forward_method,
@@ -339,7 +361,11 @@ def reverse_port_ret_quick(dframe: pd.DataFrame,
         labels=['Lo', '2', '3', '4', '5', '6', '7', '8', '9', 'Hi'])
 
     # portfolie return for every day, cap_group and ret_group
-    portfolie_ret_serie = weighted_average_by_group(df=dframe)
+    portfolie_ret_serie = weighted_average_by_group(
+        df=dframe,
+        groupby_columns=['Trddt', 'cap_group', 'ret_group'],
+        calcu_column='forward_cum_col',
+        weights_column='dollar_volume')
 
     # Low group substract high group to form reverse portfolie.
     reverse_ret_time_series: pd.DataFrame = reverse_port_ret_all(
