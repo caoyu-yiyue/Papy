@@ -39,6 +39,9 @@ data/interim/reverse_port_ret.pickle: data/interim/prepared_data.pickle
 data/interim/reverse_ret_use_exc.pickle: data/interim/prepared_data.pickle
 	python3 src/features/reverse_exc_ret.py $@
 
+data/interim/reverse_port_turnover.pickle: data/interim/prepared_data.pickle data/raw/raw_data.h5
+	python3 src/features/reverse_port_liquidity.py $@
+
 # process OLS rm_features data frame
 data/processed/rm_features.pickle: data/interim/reverse_ret_use_exc.pickle
 	python3 src/features/process_features.py --which rm_features $< $@
