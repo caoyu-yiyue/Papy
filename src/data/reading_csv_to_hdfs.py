@@ -60,7 +60,7 @@ for index, file in enumerate(file_list):
         header=0,
         names=['Trddt', 'Stkcd', 'turnOver'],
         parse_dates=['Trddt'],
-        index_col='Trddt')
+        index_col=['Stkcd', 'Trddt'])
     if index == 0:
         turnOver_df = temp_df
     else:
