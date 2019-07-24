@@ -2,7 +2,7 @@
 
 import pandas as pd
 from src.features import process_data_api as proda
-from statsmodels.regression import linear_model as lm
+import statsmodels.api as sm
 import click
 
 
@@ -38,7 +38,8 @@ def select_features(features_type: str):
     return features
 
 
-def ols_setting(targets: pd.DataFrame, features: pd.DataFrame):
+# 用于单组内的OLS 回归设定，在在每组内apply
+def _each_group_ols_setting(targets: pd.DataFrame, features: pd.DataFrame):
     """
     根据一个targets 和一组features，设定一个OLS model 类
     Parameters:
@@ -56,13 +57,13 @@ def ols_setting(targets: pd.DataFrame, features: pd.DataFrame):
     statsmodels.regression.linear_models.OLS
         一个statsmodels 下的OLS 类
     """
-    features = lm.add_constant(features)
-    ols_model = lm.OLS(
-        endog=targets.droplevel([1, 2]), exog=features, missing='drop')
+
+    features = sm.add_constant(features)
+    ols_model = sm.OLS(endog=targets, exog=features, missing='drop')
     return ols_model
 
 
-def ols_train(model: lm.OLS):
+def _each_ols_train(model: sm.OLS):
     """
     对输入的OLS model 进行拟合，返回拟合的结果。
     默认使用修正了异方差、自相关、多重共线性后的协方差矩阵，滞后阶数为5
@@ -80,6 +81,68 @@ def ols_train(model: lm.OLS):
     """
     fit = model.fit(cov_type='HAC', cov_kwds={'maxlags': 5})
     return fit
+
+
+# 用于将target 与features 组合后进行分组设定回归模型的函数
+def ols_in_group(target: pd.Series,
+                 features: pd.DataFrame,
+                 merge_on: str = None,
+                 groupby_col=['cap_group', 'rev_group']):
+    """
+    为一个target 和一个或一组features 进行分组ols 拟合。结果返回按照groupby_col 为index 的DataFrame
+
+    Parameter:
+    ----------
+    target:
+        pd.Series
+        用于回归使用的target(Y 值)
+
+    features:
+        pd.DataFrame 或pd.Series
+        用于回归使用的features(X 值)
+
+    merge_on:
+        str, list of str, default None
+        用于合并target 和features 时所依赖的列的名字，为str 或list of str
+
+    groupby_col:
+        str, list of str, default ['cap_group', 'rev_group']
+        用于分组进行OLS 回归时的组别列
+
+    Return:
+    -------
+    pd.DataFrame
+        分组回归后，以groupby_col 为index（或mutiIndex）为index 的DataFrame
+        每一项都为statsmodels 下的OLSResult 对象
+
+    """
+
+    # 判定输入的类型，统一转置为DataFrame 然后合并
+    combine_list = [target, features]
+
+    combine_df_list = [
+        pd.DataFrame(item) if not isinstance(item, pd.DataFrame) else item
+        for item in combine_list
+    ]
+
+    # 将targets 与features 合并为一个数据框，用于下一步分组OLS
+    df_for_ols = combine_df_list[0].join(combine_df_list[1],
+                                         how='left',
+                                         on=merge_on,
+                                         lsuffix='target')
+
+    # 使用传入的分组参数groupby_col 对组合完的数据框分组，每组内应用前面的函数设定OLS 模型对象
+    ols_setted: pd.DataFrame = df_for_ols.groupby(groupby_col).apply(
+        lambda df: _each_group_ols_setting(df.iloc[:, 0], df.iloc[:, 1:]))
+
+    # 对上面设定完的每个OLS 对象进行拟合
+    ols_trained: pd.Series = ols_setted.apply(_each_ols_train)
+
+    # reindex the Series for the ols results
+    ols_series_reindexed = ols_trained.reindex(
+        index=['Small', '2', '3', '4', 'Big'], level=0)
+
+    return ols_series_reindexed
 
 
 def read_ols_results_df(ols_features_type: str, style: str = 'landscape'):
@@ -123,57 +186,23 @@ def read_ols_results_df(ols_features_type: str, style: str = 'landscape'):
     return returned_ols_results
 
 
-def ols_for_grouped(target_series: pd.Series,
-                    features_df: pd.DataFrame,
-                    target_groupby_col=['cap_group', 'rev_group']):
-    """
-    对targets_series 按照target_groupby_col 进行分组后，对features 进行ols 回归。
-
-    Parameters:
-    -----------
-    target_series:
-        pandas.Series
-        进行回归使用的target, 其中应包含groupby_col 所指定的column 或index
-
-    features_df:
-        pandas.DataFrame
-        进行回归使用的features
-
-    target_groupby_col:
-        str or list of str, default ['cap_group', 'rev_group']
-        对targets 进行分组时依据的column 或index 名
-
-    Returns:
-    --------
-    pandas.DataFrame
-        一个每一个对象都是statasmodels.regressions.liner_models.OLSResults 的数据框
-    """
-
-    # 对targets 进行分组后，分别与features 进行OLS 模型设定，并在接下来进行拟合
-    targets_grouped = target_series.groupby(target_groupby_col)
-    models_setted: pd.Series = targets_grouped.agg(
-        ols_setting, features=features_df)
-    models_trained: pd.Series = models_setted.apply(ols_train)
-
-    # reindex the Series for the ols results
-    models_series_reindexed = models_trained.reindex(
-        index=['Small', '2', '3', '4', 'Big'], level=0)
-
-    return models_series_reindexed
-
-
 @click.command()
-@click.option(
-    '--featurestype',
-    type=click.Choice(
-        ['market_ret', 'rolling_std_log', 'delta_std', 'delta_std_and_rm']),
-    help='select the features\' type being to use')
+@click.option('--featurestype',
+              type=click.Choice([
+                  'market_ret', 'rolling_std_log', 'delta_std',
+                  'delta_std_and_rm'
+              ]),
+              help='select the features\' type being to use')
 @click.argument('output_file', type=click.Path(writable=True))
 def main(featurestype, output_file):
     """
     使用不同的features，对超额收益率计算的反转组合收益，进行OLS 回归。
     最终将不同组（规模 * 反转策略）的OLS 回归结果组成的pd.DataFrame 保存，
     存储路径为'models/ + featurestype + 'feautured_ols_results.pickle'
+
+    **这里使用features 的index name 作为合并target 与features 的依据列
+    注意在data process 的过程中，最终features 对象的index 为用于将二者合并的列**
+
 
     Parameters:
     -----------
@@ -187,8 +216,12 @@ def main(featurestype, output_file):
     targets_series: pd.Series = proda.get_targets()
     features: pd.DataFrame = select_features(features_type=featurestype)
 
-    # 调用对整个targets 序列进行分组回归的函数
-    ols_results_df = ols_for_grouped(targets_series, features)
+    # 对targets 和features 进行回归。其中，merger_on_col 为用以组合二者的共同列名
+    # 这里为避免在命令行处传参，定义为features 的index 名(str 或list)
+    perhap_index_name = [features.index.name, features.index.names]
+    merge_on_col = next(item for item in perhap_index_name if item is not None)
+
+    ols_results_df = ols_in_group(targets_series, features, merge_on_col)
 
     # 保存结果
     ols_results_df.to_pickle(output_file)
