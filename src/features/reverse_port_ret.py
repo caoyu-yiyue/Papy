@@ -174,7 +174,7 @@ def weighted_average_by_group(
 
     print('Calculating the weighted average return for mini group...')
 
-    @numba.jit(nopython=True)
+    @numba.jit(nopython=True, parallel=True)
     def _weighted_mean(data_col, weights_col):
         return (data_col * weights_col).sum() / weights_col.sum()
 
