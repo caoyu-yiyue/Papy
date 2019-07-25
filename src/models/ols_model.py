@@ -104,6 +104,7 @@ def ols_in_group(target: pd.Series,
     merge_on:
         str, list of str, default None
         用于合并target 和features 时所依赖的列的名字，为str 或list of str
+        当为None 时，默认使用features 的index
 
     groupby_col:
         str, list of str, default ['cap_group', 'rev_group']
@@ -124,6 +125,13 @@ def ols_in_group(target: pd.Series,
         pd.DataFrame(item) if not isinstance(item, pd.DataFrame) else item
         for item in combine_list
     ]
+
+    # 如果传入的merge_on 为空值，那么将其设定为features 的index 的name
+    if merge_on is None:
+        print('Did not specify on which to merge Y and X, \
+            using X\'s index instead.')
+        perhap_index_name = [features.index.name, features.index.names]
+        merge_on = next(item for item in perhap_index_name if item is not None)
 
     # 将targets 与features 合并为一个数据框，用于下一步分组OLS
     df_for_ols = combine_df_list[0].join(combine_df_list[1],
@@ -216,12 +224,8 @@ def main(featurestype, output_file):
     targets_series: pd.Series = proda.get_targets()
     features: pd.DataFrame = select_features(features_type=featurestype)
 
-    # 对targets 和features 进行回归。其中，merger_on_col 为用以组合二者的共同列名
-    # 这里为避免在命令行处传参，定义为features 的index 名(str 或list)
-    perhap_index_name = [features.index.name, features.index.names]
-    merge_on_col = next(item for item in perhap_index_name if item is not None)
-
-    ols_results_df = ols_in_group(targets_series, features, merge_on_col)
+    # 对targets 和features 进行回归。其中，merger_on_col 为None，默认使用features 的index
+    ols_results_df = ols_in_group(targets_series, features)
 
     # 保存结果
     ols_results_df.to_pickle(output_file)
