@@ -85,8 +85,8 @@ def _each_ols_train(model: sm.OLS):
 
 # 用于将target 与features 组合后进行分组设定回归模型的函数
 def ols_in_group(target: pd.Series,
-                 features: pd.DataFrame,
-                 merge_on: str = None,
+                 features: list,
+                 merge_on: list = None,
                  groupby_col=['cap_group', 'rev_group']):
     """
     为一个target 和一个或一组features 进行分组ols 拟合。结果返回按照groupby_col 为index 的DataFrame
@@ -94,11 +94,11 @@ def ols_in_group(target: pd.Series,
     Parameter:
     ----------
     target:
-        pd.Series
+        pd.Series, pd.DataFrame
         用于回归使用的target(Y 值)
 
     features:
-        pd.DataFrame 或pd.Series
+        pd.DataFrame, pd.Series, list of pd.DataFrame or pd.Series
         用于回归使用的features(X 值)
 
     merge_on:
@@ -118,26 +118,43 @@ def ols_in_group(target: pd.Series,
 
     """
 
+    # 输入的merge_on 如果不是None，则应该与features 序列的长度相同
+    assert (merge_on is None or len(merge_on) == len(features)
+            ), 'Parameter \'merge_on\' must be None or as long as \'features\''
+
     # 判定输入的类型，统一转置为DataFrame 然后合并
-    combine_list = [target, features]
+    if isinstance(features, list):
+        combine_list = features
+    elif isinstance(features, pd.DataFrame) or isinstance(features, pd.Series):
+        combine_list = [features]
+    else:
+        raise TypeError(
+            'features type must be DataFrame, Series or list of them.')
+    combine_list.insert(0, target)
 
     combine_df_list = [
         pd.DataFrame(item) if not isinstance(item, pd.DataFrame) else item
         for item in combine_list
     ]
 
-    # 如果传入的merge_on 为空值，那么将其设定为features 的index 的name
-    if merge_on is None:
-        print('Did not specify on which to merge Y and X, \
-            using X\'s index instead.')
-        perhap_index_name = [features.index.name, features.index.names]
-        merge_on = next(item for item in perhap_index_name if item is not None)
+    # 依次将features 数据框合并进用于ols 回归的总数据框中，用于下一步的回归。
+    df_for_ols = combine_df_list[0]
+    for i, feature_df in enumerate(combine_df_list[1:]):
+        # 如果传入的merge_on 为空值，那么将其设定为features 的index 的name
+        if merge_on is None or merge_on[i] is None:
+            print('Did not specify on which to merge Y and X, \
+                using X\'s index instead.')
+            perhap_index_name = [feature_df.index.name, feature_df.index.names]
+            merger = [item for item in perhap_index_name
+                      if item is not None][0]
+        else:
+            merger = merge_on[i]
 
-    # 将targets 与features 合并为一个数据框，用于下一步分组OLS
-    df_for_ols = combine_df_list[0].join(combine_df_list[1],
-                                         how='left',
-                                         on=merge_on,
-                                         lsuffix='target')
+        # 将targets 与features 合并为一个数据框，用于下一步分组OLS
+        df_for_ols = df_for_ols.join(feature_df,
+                                     how='left',
+                                     on=merger,
+                                     lsuffix='target')
 
     # 使用传入的分组参数groupby_col 对组合完的数据框分组，每组内应用前面的函数设定OLS 模型对象
     ols_setted: pd.DataFrame = df_for_ols.groupby(groupby_col).apply(
