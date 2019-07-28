@@ -399,6 +399,9 @@ def reverse_port_ret_quick(dframe: pd.DataFrame,
             calcu_column='forward_cum_col',
             weights_column='dollar_volume')
 
+        result_time_series = result_time_series.reindex(
+            index=['Lo-Hi', '2-9', '3-8', '4-7', '5-6'], level=2)
+
     return result_time_series
 
 

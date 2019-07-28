@@ -33,10 +33,7 @@ def main(output_file):
         col_for_forward_looking='turnOver',
         average_in='reverse_group')
 
-    rev_port_turnover_reindexed = rev_port_turnover.reindex(
-        index=['Lo-Hi', '2-9', '3-8', '4-7', '5-6'], level=2)
-
-    rev_port_turnover_reindexed.to_pickle(output_file)
+    rev_port_turnover.to_pickle(output_file)
 
 
 if __name__ == "__main__":
