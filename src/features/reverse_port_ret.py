@@ -48,8 +48,8 @@ def backward_rolling_apply(df: pd.DataFrame,
           ' column \'{}\'...'.format(calcu_column))
 
     applied_series: pd.Series = df.loc[:, calcu_column].groupby(
-        level=groupby_column, group_keys=False).rolling(window=window).apply(
-            method, raw=True)
+        level=groupby_column,
+        group_keys=False).rolling(window=window).apply(method, raw=True)
     return applied_series
 
 
@@ -105,8 +105,7 @@ def forward_rolling_apply(df: pd.DataFrame,
     reverse_order: pd.Series = df[::-1].loc[:, calcu_column]
     applied_series: pd.Series = reverse_order.groupby(
         groupby_column, group_keys=False,
-        sort=False).shift(shift).rolling(window).apply(
-            method, raw=True)
+        sort=False).shift(shift).rolling(window).apply(method, raw=True)
     return applied_series.sort_index(level=df.index.names)
 
 
@@ -138,8 +137,8 @@ def creat_group_signs(df: pd.Series, column_to_cut: str, groupby_column: str,
     print('Creating the group signs for {}...'.format(column_to_cut))
 
     grouped_df = df.loc[:, column_to_cut].groupby(groupby_column)
-    return grouped_df.transform(
-        lambda serie: pd.qcut(serie, q=quntiles, labels=labels))
+    return grouped_df.transform(lambda serie: pd.qcut(
+        serie, q=quntiles, labels=labels))
 
 
 def weighted_average_by_group(
@@ -178,12 +177,11 @@ def weighted_average_by_group(
     def _weighted_mean(data_col, weights_col):
         return (data_col * weights_col).sum() / weights_col.sum()
 
-    return df.groupby(groupby_columns).apply(
-        lambda x: _weighted_mean(
-            x[calcu_column].to_numpy(), x[weights_column].to_numpy()))
+    return df.groupby(groupby_columns).apply(lambda x: _weighted_mean(
+        x[calcu_column].to_numpy(), x[weights_column].to_numpy()))
 
 
-def combine_low_high(serie: pd.Series, how: str):
+def _combine_low_high(serie: pd.Series, how: str):
     """
     输入不同标准收益率分组的一列序列，输家-赢家获得反转组合收益
 
@@ -236,8 +234,8 @@ def reverse_port_ret_all(serie: pd.Series, combine_style: str):
 
     # 按照前两组分类，然后每组计算反转组合组成的所需数值。
     grouped_serie = serie.groupby(level=[0, 1])
-    reverse_ret_in_serie: pd.Series = grouped_serie.apply(
-        combine_low_high, how=combine_style)
+    reverse_ret_in_serie: pd.Series = grouped_serie.apply(_combine_low_high,
+                                                          how=combine_style)
     # 将Series of list 转换为DataFrame
     reverse_ret_each_day = pd.DataFrame(
         (item for item in reverse_ret_in_serie),
@@ -269,10 +267,25 @@ def reverse_port_ret_aver(df: pd.DataFrame,
         返回平均过后的反转组合收益率
     """
     reverse_ret_aver = df.groupby(groupby_column).mean()
-    reverse_ret_aver.set_axis(
-        pd.CategoricalIndex(reverse_ret_aver.index, categories=categories),
-        inplace=True)
+    reverse_ret_aver.set_axis(pd.CategoricalIndex(reverse_ret_aver.index,
+                                                  categories=categories),
+                              inplace=True)
     return reverse_ret_aver.sort_index()
+
+
+# 创建反转组合的标签的私有函数
+@numba.jit(nopython=True)
+def _creat_rev_group(row):
+    if row == 'Lo' or row == 'Hi':
+        return 'Lo-Hi'
+    elif row == '2' or row == '9':
+        return '2-9'
+    elif row == '3' or row == '8':
+        return '3-8'
+    elif row == '4' or row == '7':
+        return '4-7'
+    elif row == '5' or row == '6':
+        return '5-6'
 
 
 def reverse_port_ret_quick(dframe: pd.DataFrame,
@@ -282,6 +295,7 @@ def reverse_port_ret_quick(dframe: pd.DataFrame,
                            forward_method=_cumulative_ret,
                            col_for_backward_looking: str = 'log_ret',
                            col_for_forward_looking: str = 'Dretwd',
+                           average_in: str = 'return_group',
                            combine_style='sub'):
     """
     将如上计算反转组合收益率的步骤组合在一起，
@@ -360,18 +374,30 @@ def reverse_port_ret_quick(dframe: pd.DataFrame,
         quntiles=10,
         labels=['Lo', '2', '3', '4', '5', '6', '7', '8', '9', 'Hi'])
 
-    # portfolie return for every day, cap_group and ret_group
-    portfolie_ret_serie = weighted_average_by_group(
-        df=dframe,
-        groupby_columns=['Trddt', 'cap_group', 'ret_group'],
-        calcu_column='forward_cum_col',
-        weights_column='dollar_volume')
+    if average_in == 'return_group':
+        # portfolie return for every day, cap_group and ret_group
+        portfolie_ret_serie = weighted_average_by_group(
+            df=dframe,
+            groupby_columns=['Trddt', 'cap_group', 'ret_group'],
+            calcu_column='forward_cum_col',
+            weights_column='dollar_volume')
 
-    # Low group substract high group to form reverse portfolie.
-    reverse_ret_time_series: pd.DataFrame = reverse_port_ret_all(
-        serie=portfolie_ret_serie, combine_style=combine_style)
+        # Low group substract high group to form reverse portfolie.
+        result_time_series: pd.Series = reverse_port_ret_all(
+            serie=portfolie_ret_serie, combine_style=combine_style)
 
-    return reverse_ret_time_series
+    elif average_in == 'reverse_group':
+        # 根据收益率的分组，计算出该行位于哪一个反转组合（reverse_group）内
+        dframe['rev_group'] = dframe['ret_group'].apply(_creat_rev_group)
+
+        # 直接按照时间、规模、反转组合组别进行分组，计算加权平均的换手率
+        result_time_series: pd.Series = weighted_average_by_group(
+            dframe,
+            groupby_columns=['Trddt', 'cap_group', 'rev_group'],
+            calcu_column='forward_cum_col',
+            weights_column='dollar_volume')
+
+    return result_time_series
 
 
 def read_reverse_port_ret_data(fname='data/interim/reverse_port_ret.pickle'):
@@ -380,8 +406,8 @@ def read_reverse_port_ret_data(fname='data/interim/reverse_port_ret.pickle'):
 
 
 @click.command()
-@click.argument(
-    'input_file', type=click.Path(exists=True, readable=True, dir_okay=True))
+@click.argument('input_file',
+                type=click.Path(exists=True, readable=True, dir_okay=True))
 @click.argument('output_file', type=click.Path(writable=True, dir_okay=True))
 def main(input_file, output_file):
 
