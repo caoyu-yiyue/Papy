@@ -137,8 +137,8 @@ def creat_group_signs(df: pd.Series, column_to_cut: str, groupby_column: str,
     print('Creating the group signs for {}...'.format(column_to_cut))
 
     grouped_df = df.loc[:, column_to_cut].groupby(groupby_column)
-    return grouped_df.transform(lambda serie: pd.qcut(
-        serie, q=quntiles, labels=labels))
+    return grouped_df.transform(
+        lambda serie: pd.qcut(serie, q=quntiles, labels=labels))
 
 
 def weighted_average_by_group(
@@ -237,10 +237,12 @@ def reverse_port_ret_all(serie: pd.Series, combine_style: str):
     reverse_ret_in_serie: pd.Series = grouped_serie.apply(_combine_low_high,
                                                           how=combine_style)
     # 将Series of list 转换为DataFrame
-    reverse_ret_each_day = pd.DataFrame(
+    reverse_ret_each_day: pd.Series = pd.DataFrame(
         (item for item in reverse_ret_in_serie),
         index=reverse_ret_in_serie.index,
-        columns=['Lo-Hi', '2-9', '3-8', '4-7', '5-6'])
+        columns=['Lo-Hi', '2-9', '3-8', '4-7', '5-6']).stack()
+    reverse_ret_each_day.rename_axis(['Trddt', 'cap_group', 'rev_group'],
+                                     inplace=True)
     return reverse_ret_each_day
 
 
