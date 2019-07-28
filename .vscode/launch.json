@@ -42,6 +42,17 @@
                 "models/ols_with_market_ret.pickle"]
         },
         {
+            "name": "Python: turnover process",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "envFile": "${workspaceFolder}/papy.env",
+            "args": ["data/interim/reverse_port_turnover.pickle"]
+            // "justMyCode": false
+        },
+
+        {
             "name": "Python: Remote Attach",
             "type": "python",
             "request": "attach",
