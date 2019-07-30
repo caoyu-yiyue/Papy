@@ -35,26 +35,23 @@ data/interim/prepared_data.pickle: data/raw/raw_data.h5
 data/interim/reverse_port_ret.pickle: data/interim/prepared_data.pickle
 	python3 src/features/reverse_port_ret.py $< $@
 
-# caculate a reverse porfolie return time series using the excess return for cumulate.
-data/interim/reverse_ret_use_exc.pickle: data/interim/prepared_data.pickle
+# caculate a reverse porfolie return as target using the excess return for cumulate.
+data/processed/targets.pickle: data/interim/prepared_data.pickle
 	python3 src/features/reverse_exc_ret.py $@
 
 data/interim/reverse_port_turnover.pickle: data/interim/prepared_data.pickle data/raw/raw_data.h5
 	python3 src/features/reverse_port_liquidity.py $@
 
 # process OLS rm_features data frame
-data/processed/rm_features.pickle: data/interim/reverse_ret_use_exc.pickle
+data/processed/rm_features.pickle: data/processed/targets.pickle
 	python3 src/features/process_features.py --which rm_features $< $@
 
 # process OLS std_features data frame
-data/processed/std_features.pickle: data/interim/reverse_ret_use_exc.pickle
+data/processed/std_features.pickle: data/processed/targets.pickle
 	python3 src/features/process_features.py --which std_features $< $@
 
 # process OLS features and targets data frame
 features: data/processed/rm_features.pickle data/processed/std_features.pickle
-
-data/processed/targets.pickle: data/interim/reverse_ret_use_exc.pickle
-	python3 src/features/process_targets.py $< $@
 
 # contruct ols models data frame
 # ols with market excess return
@@ -78,6 +75,6 @@ ols_models: models/ols_with_market_ret.pickle models/ols_with_rolling_std_log.pi
 models/ols_with_delta_std.pickle models/ols_with_delta_std_and_rm.pickle
 
 build_from_h5: data/interim/prepared_data.pickle data/interim/reverse_port_ret.pickle\
-data/interim/reverse_ret_use_exc.pickle features data/processed/targets.pickle ols_models
+features data/processed/targets.pickle ols_models
 
 all: data/raw/raw_data.h5 build_from_h5

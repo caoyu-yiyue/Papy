@@ -1,6 +1,5 @@
 import pandas as pd
 import click
-from src.features import reverse_exc_ret as rxr
 from src.features import process_data_api as proda
 
 
@@ -18,7 +17,7 @@ def main(which, input_file, output_file):
         'std_features'), 'Invalid type {} of features data frame'.format(which)
 
     # 读取使用**超额收益率** 计算的反转组合收益数据框，并取出时间index
-    reverse_ret_dframe: pd.Series = rxr.read_reverse_exc_data(input_file)
+    reverse_ret_dframe: pd.Series = proda.get_targets()
     year_index: pd.Series = proda.obtain_feature_index(reverse_ret_dframe)
 
     if which == 'rm_features':

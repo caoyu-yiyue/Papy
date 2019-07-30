@@ -23,7 +23,7 @@ def obtain_feature_index(reverse_ret_dframe: pd.DataFrame):
     """
 
     # 从reverse_ret_dframe 的index 中，抛去不需要的level，并去重，拿出日期那一列的level
-    year_idx = reverse_ret_dframe.index.droplevel('cap_group').unique()
+    year_idx = reverse_ret_dframe.index.get_level_values('Trddt').unique()
     return year_idx
 
 
@@ -103,30 +103,6 @@ def shift_leading_gradually(benchmark: pd.Series,
                              '_t_{}'.format(index)] = shifted_serie
 
     return dframe_added_leading
-
-
-def generate_targets(reverse_ret_dframe: pd.DataFrame):
-    """
-    从反转收益组合数据，生成用于OLS 分组回归的targets 一列Series
-    Parameters:
-    -----------
-    reverse_ret_dframe:
-        pd.DataFrame
-        反转组合收益率的时间序列表格，index 为时间和规模，columns 为不同反转策略（如Lo-Hi)
-
-    Results:
-    --------
-    pd.Series
-        用于OLS 回归的Series，index 为时间、规模组、反转策略
-    """
-
-    target_series: pd.Series = reverse_ret_dframe.stack()
-
-    # 为target_df 数据框的index 和命名
-    target_series.rename_axis(['Trddt', 'cap_group', 'rev_group'],
-                              inplace=True)
-
-    return target_series
 
 
 def get_rm_features(file='data/processed/rm_features.pickle'):
@@ -214,7 +190,7 @@ def get_targets(file='data/processed/targets.pickle'):
 
     Results:
     --------
-    pandas.DataFrame:
+    pandas.Series:
         读取的targets 数据框
     """
 

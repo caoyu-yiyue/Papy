@@ -35,11 +35,6 @@ def add_exc_ret_column(dframe: pd.DataFrame,
     return dframe
 
 
-def read_reverse_exc_data(file='data/interim/reverse_ret_use_exc.pickle'):
-    dframe = pd.read_pickle(file)
-    return dframe
-
-
 @click.command()
 @click.argument('output_file', type=click.Path(writable=True))
 def main(output_file):
@@ -48,15 +43,15 @@ def main(output_file):
     risk_free_series = predata.read_rf_data()
 
     # add the excess return column
-    dframe_added = add_exc_ret_column(
-        dframe=dframe_prepared,
-        rf_series=risk_free_series,
-        exc_col_name='exc_ret')
+    dframe_added = add_exc_ret_column(dframe=dframe_prepared,
+                                      rf_series=risk_free_series,
+                                      exc_col_name='exc_ret')
 
     # use the excess return column to calculate reverse portfolie return.
     reverse_ret_use_exc: pd.DataFrame = rpt.reverse_port_ret_quick(
         dframe=dframe_added, col_for_forward_looking='exc_ret')
 
+    # 命令行将其直接保存为process 后的data/process/targets.pickle 对象
     reverse_ret_use_exc.to_pickle(output_file)
 
 
