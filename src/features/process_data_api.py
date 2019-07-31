@@ -5,6 +5,7 @@
 import pandas as pd
 import numpy as np
 from src.data import preparing_data as predata
+from src.features import reverse_port_ret as rpt
 
 
 def obtain_feature_index(reverse_ret_dframe: pd.DataFrame):
@@ -64,6 +65,84 @@ def calculate_stds(std_roll_window: int = 20):
     rolling_std_log: pd.Series = np.log(rolling_std)
 
     return (rolling_std_log, delta_std)
+
+
+def calculate_amihud(backward_window, forward_window):
+    """
+    以backward_window 和forward_window 为参数计算组合的amihud 指标。
+
+    Return:
+    -------
+        pd.Series
+    """
+    # 计算amihud 指标的主函数
+    prepared_data: pd.DataFrame = predata.read_prepared_data()
+
+    # 前一部分和计算反转组合收益的步骤一样
+    # add a column for nomolized return for each stock
+    prepared_data["norm_ret"] = rpt.backward_rolling_apply(
+        df=prepared_data,
+        window=backward_window,
+        method=rpt._normalize_last,
+        calcu_column="log_ret",
+    )
+
+    # drop na values
+    prepared_data.dropna(inplace=True)
+
+    # add a captain group sign
+    prepared_data["cap_group"] = rpt.creat_group_signs(
+        df=prepared_data,
+        column_to_cut="Dsmvosd",
+        groupby_column="Trddt",
+        quntiles=5,
+        labels=["Small", "2", "3", "4", "Big"],
+    )
+
+    # add a column for return group
+    prepared_data["ret_group"] = rpt.creat_group_signs(
+        df=prepared_data,
+        column_to_cut="norm_ret",
+        groupby_column="Trddt",
+        quntiles=10,
+        labels=["Lo", "2", "3", "4", "5", "6", "7", "8", "9", "Hi"],
+    )
+
+    # 加入一组表示反转组合组别的代号
+    prepared_data["rev_group"] = prepared_data["ret_group"].apply(
+        rpt._creat_rev_group)
+
+    # %%
+    # 计算每天的Amihud 指标
+    prepared_data['dollar_volume_today'] = prepared_data[
+        'Clsprc'] * prepared_data['Dnshrtrd']
+    prepared_data['amihud'] = (prepared_data['Dretwd'].abs() /
+                               prepared_data['dollar_volume_today'])
+
+    # %%
+    # 计算组合加权平均的Amihud 指标
+    rev_port_amihud: pd.Series = rpt.weighted_average_by_group(
+        prepared_data,
+        groupby_columns=['Trddt', 'cap_group', 'rev_group'],
+        calcu_column='amihud',
+        weights_column='dollar_volume_today')
+
+    # %%
+    # 在未来五天内进行平均，得到最终的Amihud 指标
+    rev_port_amihud.name = 'amihud'
+    amihud_time_ave: pd.Series = rpt.forward_rolling_apply(
+        df=rev_port_amihud.to_frame(),
+        window=forward_window,
+        method=np.average,
+        groupby_column=['cap_group', 'rev_group'],
+        calcu_column='amihud')
+    amihud_time_ave.dropna(inplace=True)
+
+    # 更改index 顺序
+    amihud_reindex: pd.Series = amihud_time_ave.reindex(
+        ['Lo-Hi', '2-9', '3-8', '4-7', '5-6'], level=2)
+
+    return amihud_reindex
 
 
 def shift_leading_gradually(benchmark: pd.Series,
@@ -178,6 +257,17 @@ def get_delta_std_features(file='data/processed/std_features.pickle'):
     std_dframe = pd.read_pickle(file)
     delta_std_col = [col for col in std_dframe if col.startswith('delta_')]
     return std_dframe[delta_std_col]
+
+
+def get_amihud_features(file='data/processed/amihud_features.pickle'):
+    """
+    读取保存的amihud 指标
+
+    Return:
+    -------
+        pd.Series
+    """
+    return pd.read_pickle(file)
 
 
 def get_targets(file='data/processed/targets.pickle'):

@@ -19,7 +19,10 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "envFile": "${workspaceFolder}/papy.env",
-            "args": ["data/interim/prepared_data.pickle","data/interim/reverse_port_ret.pickle"]
+            "args": [
+                "data/interim/prepared_data.pickle",
+                "data/interim/reverse_port_ret.pickle"
+            ]
         },
         {
             "name": "Python: Process features",
@@ -28,8 +31,15 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "envFile": "${workspaceFolder}/papy.env",
-            "args": ["--which", "std_features",
-                "data/interim/reverse_ret_use_exc.pickle", "data/processed/rm_features.pickle"]
+            "args": [
+                "--which",
+                "amihud",
+                "--windows",
+                "60",
+                "5",
+                "data/processed/targets.pickle",
+                "data/processed/amihud_features.pickle"
+            ]
         },
         {
             "name": "Python: ols models",
@@ -38,8 +48,11 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "envFile": "${workspaceFolder}/papy.env",
-            "args": ["--featurestype", "market_ret",
-                "models/ols_with_market_ret.pickle"]
+            "args": [
+                "--featurestype",
+                "market_ret",
+                "models/ols_with_market_ret.pickle"
+            ]
         },
         {
             "name": "Python: turnover process",
@@ -48,10 +61,11 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "envFile": "${workspaceFolder}/papy.env",
-            "args": ["data/interim/reverse_port_turnover.pickle"]
+            "args": [
+                "data/interim/reverse_port_turnover.pickle"
+            ]
             // "justMyCode": false
         },
-
         {
             "name": "Python: Remote Attach",
             "type": "python",

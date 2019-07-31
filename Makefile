@@ -50,8 +50,13 @@ data/processed/rm_features.pickle: data/processed/targets.pickle
 data/processed/std_features.pickle: data/processed/targets.pickle
 	python3 src/features/process_features.py --which std_features $< $@
 
+# process amihud features series
+data/processed/amihud_features.pickle: data/processed/targets.pickle data/interim/prepared_data.pickle 
+	python3 src/features/process_features.py --which amihud --windows 60 5 $< $@
+
 # process OLS features and targets data frame
-features: data/processed/rm_features.pickle data/processed/std_features.pickle
+features: data/processed/rm_features.pickle data/processed/std_features.pickle \
+data/processed/amihud_features.pickle
 
 # contruct ols models data frame
 # ols with market excess return
