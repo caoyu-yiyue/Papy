@@ -237,7 +237,7 @@ def get_rolling_std_features(file='data/processed/std_features.pickle'):
     """
 
     std_dframe = pd.read_pickle(file)
-    return std_dframe['rolling_std_log'].to_frame()
+    return std_dframe['rolling_std_log']
 
 
 def get_delta_std_features(file='data/processed/std_features.pickle'):
