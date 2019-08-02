@@ -7,7 +7,8 @@ from src.features import process_data_api as proda
 @click.option(
     '--which',
     help='the type of ols features data frame to generate',
-    type=click.Choice(choices=['rm_features', 'std_features', 'amihud']))
+    type=click.Choice(
+        choices=['rm_features', 'std_features', 'turnover', 'amihud']))
 @click.option(
     '--windows',
     help='Backward and forward window length to calculate some features.',
@@ -18,7 +19,7 @@ from src.features import process_data_api as proda
 def main(which, windows, input_file, output_file):
 
     assert which in (
-        'rm_features', 'std_features',
+        'rm_features', 'std_features', 'turnover',
         'amihud'), 'Invalid type {} of features data frame'.format(which)
 
     # 读取使用**超额收益率** 计算的反转组合收益数据框，并取出时间index
@@ -38,6 +39,13 @@ def main(which, windows, input_file, output_file):
             delta_std.reindex(year_index), col_name_prefix='delta_std')
         std_features['rolling_std_log'] = rolling_std_log
         features_df: pd.DataFrame = std_features
+    elif which == 'turnover':
+        # 计算组合的turnover，依赖向前和向后的窗口长度
+        backward, forward = windows
+        turnover_series: pd.Series = proda.calculate_turnover(
+            backward, forward)
+        features_df: pd.Series = turnover_series.reindex(year_index,
+                                                         level='Trddt')
     elif which == 'amihud':
         # 计算组合的Amihud 指标，依赖向前和向后的窗口长度
         backward, forward = windows

@@ -39,9 +39,6 @@ data/interim/reverse_port_ret.pickle: data/interim/prepared_data.pickle
 data/processed/targets.pickle: data/interim/prepared_data.pickle
 	python3 src/features/reverse_exc_ret.py $@
 
-data/interim/reverse_port_turnover.pickle: data/interim/prepared_data.pickle data/raw/raw_data.h5
-	python3 src/features/reverse_port_liquidity.py $@
-
 # process OLS rm_features data frame
 data/processed/rm_features.pickle: data/processed/targets.pickle
 	python3 src/features/process_features.py --which rm_features $< $@
@@ -50,14 +47,20 @@ data/processed/rm_features.pickle: data/processed/targets.pickle
 data/processed/std_features.pickle: data/processed/targets.pickle
 	python3 src/features/process_features.py --which std_features $< $@
 
+# process OlS turnover features
+data/processed/turnover_features.pickle: data/processed/targets.pickle \
+data/interim/prepared_data.pickle data/raw/raw_data.h5
+	python3 src/features/process_features.py --which turnover --windows 60 5 $< $@
+
 # process amihud features series
 data/processed/amihud_features.pickle: data/processed/targets.pickle data/interim/prepared_data.pickle 
 	python3 src/features/process_features.py --which amihud --windows 60 5 $< $@
 
 # process OLS features and targets data frame
 features: data/processed/rm_features.pickle data/processed/std_features.pickle \
-data/processed/amihud_features.pickle
+data/processed/turnover_features.pickle data/processed/amihud_features.pickle
 
+# ======================================================================================================= #
 # contruct ols models data frame
 # ols with market excess return
 models/ols_with_market_ret.pickle: data/processed/rm_features.pickle data/processed/targets.pickle

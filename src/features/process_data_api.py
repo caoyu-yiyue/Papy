@@ -67,6 +67,33 @@ def calculate_stds(std_roll_window: int = 20):
     return (rolling_std_log, delta_std)
 
 
+def calculate_turnover(backward_window, forward_window):
+    """
+    根据输入的向前和向后窗口，计算组合的turnover。
+
+    Parameters：
+    -----------
+    backward_window, forward_window:
+        int, 向前和向后计算组合的窗口长度
+    """
+    prepared_data: pd.DataFrame = predata.read_prepared_data()
+    turnover_df: pd.DataFrame = predata.read_turnover_data()
+    turnover_merged: pd.DataFrame = prepared_data.join(turnover_df,
+                                                       on=['Stkcd', 'Trddt'])
+
+    rev_port_turnover: pd.Series = rpt.reverse_port_ret_quick(
+        turnover_merged,
+        backward_window=backward_window,
+        forward_window=forward_window,
+        backward_method=rpt._normalize_last,
+        forward_method=sum,
+        col_for_backward_looking='log_ret',
+        col_for_forward_looking='turnOver',
+        average_in='reverse_group')
+
+    return rev_port_turnover
+
+
 def calculate_amihud(backward_window, forward_window):
     """
     以backward_window 和forward_window 为参数计算组合的amihud 指标。
@@ -257,6 +284,18 @@ def get_delta_std_features(file='data/processed/std_features.pickle'):
     std_dframe = pd.read_pickle(file)
     delta_std_col = [col for col in std_dframe if col.startswith('delta_')]
     return std_dframe[delta_std_col]
+
+
+def get_turnover_features(file='data/processed/turnover_features.pickle'):
+    """
+    读取组合的turnover 数据
+
+    Returns:
+    --------
+        pd.Series
+    """
+    dframe = pd.read_pickle(file)
+    return dframe
 
 
 def get_amihud_features(file='data/processed/amihud_features.pickle'):
