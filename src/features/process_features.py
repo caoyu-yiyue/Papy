@@ -23,7 +23,7 @@ def main(which, windows, input_file, output_file):
         'amihud'), 'Invalid type {} of features data frame'.format(which)
 
     # 读取使用**超额收益率** 计算的反转组合收益数据框，并取出时间index
-    reverse_ret_dframe: pd.Series = proda.get_targets()
+    reverse_ret_dframe: pd.Series = proda.get_targets(input_file)
     year_index: pd.Series = proda.obtain_feature_index(reverse_ret_dframe)
 
     if which == 'rm_features':
