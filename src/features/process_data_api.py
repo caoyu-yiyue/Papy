@@ -173,6 +173,16 @@ def calculate_amihud(backward_window, forward_window):
 
 
 def calculate_ret_sign(port_ret: pd.Series):
+    """
+    输入组合反转收益率，返回与其维度相同的、表示其为正或负的虚拟变量
+    Parameters:
+    -----------
+    port_ret:
+        pd.Series 组合收益率的Series
+    
+    Return:
+        pd.Series 表示收益正或负的虚拟变量
+    """
 
     return port_ret.gt(0).astype(float).rename('ret_sign')
 
