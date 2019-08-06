@@ -324,6 +324,10 @@ def get_amihud_features(file='data/processed/amihud_features.pickle'):
     return pd.read_pickle(file)
 
 
+def get_ret_sign(file='data/processed/ret_sign.pickle'):
+    return pd.read_pickle(file)
+
+
 def get_targets(file='data/processed/targets.pickle'):
     """
     从保存的文件中读取OLS 回归所用的targets，即超额收益率计算的反转组合收益

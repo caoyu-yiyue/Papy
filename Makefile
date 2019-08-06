@@ -56,9 +56,13 @@ data/interim/prepared_data.pickle data/raw/raw_data.h5
 data/processed/amihud_features.pickle: data/processed/targets.pickle data/interim/prepared_data.pickle 
 	python3 src/features/process_features.py --which amihud --windows 60 5 $< $@
 
+data/processed/ret_sign.pickle: data/processed/targets.pickle
+	python3 src/features/process_features.py --which ret_sign $< $@
+
 # process OLS features and targets data frame
 features: data/processed/rm_features.pickle data/processed/std_features.pickle \
-data/processed/turnover_features.pickle data/processed/amihud_features.pickle
+data/processed/turnover_features.pickle data/processed/amihud_features.pickle \
+data/processed/ret_sign.pickle
 
 # ======================================================================================================= #
 # contruct ols models data frame

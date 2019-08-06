@@ -55,7 +55,7 @@ def main(which, windows, input_file, output_file):
                                                        level='Trddt')
     elif which == 'ret_sign':
         # 计算表示组合收益正负的虚拟变量
-        features_df: pd.Series = proda.calculate_ret_sign()
+        features_df: pd.Series = proda.calculate_ret_sign(reverse_ret_dframe)
     else:
         print('Wrong type of features data frame uncaught.')
 
