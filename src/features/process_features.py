@@ -7,8 +7,9 @@ from src.features import process_data_api as proda
 @click.option(
     '--which',
     help='the type of ols features data frame to generate',
-    type=click.Choice(
-        choices=['rm_features', 'std_features', 'turnover', 'amihud']))
+    type=click.Choice(choices=[
+        'rm_features', 'std_features', 'turnover', 'amihud', 'ret_sign'
+    ]))
 @click.option(
     '--windows',
     help='Backward and forward window length to calculate some features.',
@@ -19,8 +20,8 @@ from src.features import process_data_api as proda
 def main(which, windows, input_file, output_file):
 
     assert which in (
-        'rm_features', 'std_features', 'turnover',
-        'amihud'), 'Invalid type {} of features data frame'.format(which)
+        'rm_features', 'std_features', 'turnover', 'amihud',
+        'ret_sign'), 'Invalid type {} of features data frame'.format(which)
 
     # 读取使用**超额收益率** 计算的反转组合收益数据框，并取出时间index
     reverse_ret_dframe: pd.Series = proda.get_targets(input_file)
@@ -52,6 +53,9 @@ def main(which, windows, input_file, output_file):
         amihud_series: pd.Series = proda.calculate_amihud(backward, forward)
         features_df: pd.Series = amihud_series.reindex(year_index,
                                                        level='Trddt')
+    elif which == 'ret_sign':
+        # 计算表示组合收益正负的虚拟变量
+        features_df: pd.Series = proda.calculate_ret_sign()
     else:
         print('Wrong type of features data frame uncaught.')
 

@@ -172,6 +172,11 @@ def calculate_amihud(backward_window, forward_window):
     return amihud_reindex
 
 
+def calculate_ret_sign(port_ret: pd.Series):
+
+    return port_ret.gt(0).astype(float).rename('ret_sign')
+
+
 def shift_leading_gradually(benchmark: pd.Series,
                             col_name_prefix: str,
                             leading_time: int = 5):
