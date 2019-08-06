@@ -179,12 +179,38 @@ def calculate_ret_sign(port_ret: pd.Series):
     -----------
     port_ret:
         pd.Series 组合收益率的Series
-    
+
     Return:
         pd.Series 表示收益正或负的虚拟变量
     """
 
     return port_ret.gt(0).astype(float).rename('ret_sign')
+
+
+def features_mul_dummy(features, dummy, broadcast_level='Trddt'):
+    """
+    输入一个features 与一个dummy 变量，返回一个按照index 使二者相乘后得到的变量
+
+    Parameters:
+    -----------
+    features:
+        pd.Series or pd.DataFrame
+        需要与dummy 相乘的features 变量数据
+    dummy:
+        pd.Series
+        与features 进行相乘的dummy
+    broadcast_level:
+        str or list, default 'Trddt'
+        二者相乘时进行broadcast 依据的column 或index 名
+
+    Return:
+    -------
+        pd.Series or pd.DataFrame
+        dummy 与features 相乘后的变量。其类型与features 一致，长度应该和二者最长的相等
+    """
+
+    features_with_dummy = features.mul(dummy, axis=0, level=broadcast_level)
+    return features_with_dummy
 
 
 def shift_leading_gradually(benchmark: pd.Series,
