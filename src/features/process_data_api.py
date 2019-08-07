@@ -42,18 +42,23 @@ def calcualte_market_exc_ret():
     return rm_exc
 
 
-def calculate_stds(std_roll_window: int = 20):
+def calculate_stds(std_roll_window: int = 20, forward_window: int = 5):
     """
-    计算以过去std_roll_window 天滚动得到的市场历史波动率的对数值，以及相邻两天波动率的变动量
+    计算以过去std_roll_window 天滚动得到的市场历史波动率的对数值，以及相邻两天波动率的变动量、
+    相邻forward_window 天波动率的变动量。
     Parameters:
     -----------
     std_roll_window:
         int
         滚动计算标准差时，选用的滚动窗口日期
+    forward_window:
+        int
+        计算未来某些天的波动率的变动量所有的天数
     Results:
     --------
     tuple:
-        返回一个tuple，第0 个值为滚动标准差的对数值，第1 个值为标准差的变动值（差分值）
+        返回一个tuple，第0 个值为滚动标准差的对数值，第1 个值为相邻两天标准差的变动值（差分值），
+        第二个值为相邻forward_window 天标准差的变动值。
     """
 
     # 读取市场指数文件
@@ -61,10 +66,11 @@ def calculate_stds(std_roll_window: int = 20):
 
     # 计算历史滚动波动率，以及其差分值（变动情况）
     rolling_std: pd.Series = market_index.rolling(window=std_roll_window).std()
-    delta_std: pd.Series = rolling_std.diff()
+    delta_std_1day: pd.Series = rolling_std.diff()
+    delta_std_full_forward: pd.Series = rolling_std.diff(forward_window)
     rolling_std_log: pd.Series = np.log(rolling_std)
 
-    return (rolling_std_log, delta_std)
+    return (rolling_std_log, delta_std_1day, delta_std_full_forward)
 
 
 def calculate_turnover(backward_window, forward_window):
@@ -325,6 +331,19 @@ def get_delta_std_features(file='data/processed/std_features.pickle'):
     std_dframe = pd.read_pickle(file)
     delta_std_col = [col for col in std_dframe if col.startswith('delta_')]
     return std_dframe[delta_std_col]
+
+
+def get_delta_std_forward_interval(file='data/processed/std_features.pickle'):
+    """
+    读取在整个forward 区间中（比如五日内）的std 差值数据
+
+    Return:
+    -------
+        pd.Series
+    """
+    std_dframe = pd.read_pickle(file)
+    delta_std_full = std_dframe['delta_std_full_interval']
+    return delta_std_full
 
 
 def get_turnover_features(file='data/processed/turnover_features.pickle'):

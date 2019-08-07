@@ -1,10 +1,57 @@
+import pytest
 import pandas as pd
+import numpy as np
 from src.features import process_data_api as proda
+from src.data import preparing_data as preda
 
 targets: pd.Series = pd.read_pickle('data/processed/targets.pickle')
 
 
-class TestProda(object):
+class Test_std_features(object):
+    @pytest.fixture()
+    def get_std_features(self):
+        mkt_index: pd.Series = preda.read_market_index_data()
+        std_rolling_log, delta_std, delta_std_full = proda.calculate_stds(
+            std_roll_window=20, forward_window=5)
+        result_dict = {
+            'mkt_index': mkt_index,
+            'std': std_rolling_log,
+            'delta_std': delta_std,
+            'delta_std_full': delta_std_full
+        }
+        return result_dict
+
+    def test_std_rolling(self, get_std_features):
+        '''测试滚动标准差是否符合规定'''
+        mkt_index: pd.Series = get_std_features['mkt_index']
+        std_rolling_log: pd.Series = get_std_features['std']
+        assert np.log(
+            mkt_index.iloc[0:20].std()) == std_rolling_log.dropna()[0]
+
+    def test_delta_std_day1(self, get_std_features):
+        """测试每日间的标准差的差值是否符合手动计算结果"""
+        delta_std_day1: pd.Series = get_std_features['delta_std']
+        mkt_index: pd.Series = get_std_features['mkt_index']
+
+        # 因为滚动窗口计算，导致delta_std_day1 前面的（0-19）是空值，第20 个才是第一个有数字的
+        assert mkt_index.iloc[1:21].std() - mkt_index.iloc[0:20].std(
+        ) == delta_std_day1[20]
+
+    def test_delta_std_full(self, get_std_features):
+        """测试整个区间内的标准差差值是否符合手动计算的结果"""
+        mkt_index: pd.Series = get_std_features['mkt_index']
+        delta_std_full: pd.Series = get_std_features['delta_std_full']
+
+        assert mkt_index.iloc[5:25].std() - mkt_index.iloc[0:20].std(
+        ) == pytest.approx(delta_std_full[24])
+    
+    def test_get_std(self):
+        proda.get_delta_std_features()
+        proda.get_delta_std_features()
+        proda.get_delta_std_forward_interval()
+
+
+class Test_ret_sign(object):
     def test_ret_sign(self):
         ret_sign: pd.Series = proda.calculate_ret_sign(targets)
         assert (ret_sign[0:5].to_numpy() == [1.0, 0.0, 1.0, 0.0, 1.0]).all()

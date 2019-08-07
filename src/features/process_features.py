@@ -34,11 +34,13 @@ def main(which, windows, input_file, output_file):
             market_ret_exc.reindex(year_index), col_name_prefix='rm_exc')
         features_df: pd.DataFrame = rm_exc_features
     elif which == 'std_features':
-        # 使用波动率的差值，错位计算出未来t+1,...,t+5 期的列，同时加上一列波动率本身的值，作为features 保存
-        rolling_std_log, delta_std = proda.calculate_stds()
+        # 使用波动率的差值，错位计算出未来t+1,...,t+5 期的列，同时加上一列波动率本身的值，
+        # 一列整个区间上的波动率变动的值，作为features 保存
+        rolling_std_log, delta_std, delta_std_forward = proda.calculate_stds()
         std_features: pd.DataFrame = proda.shift_leading_gradually(
             delta_std.reindex(year_index), col_name_prefix='delta_std')
         std_features['rolling_std_log'] = rolling_std_log
+        std_features['delta_std_full_interval'] = delta_std_forward
         features_df: pd.DataFrame = std_features
     elif which == 'turnover':
         # 计算组合的turnover，依赖向前和向后的窗口长度
