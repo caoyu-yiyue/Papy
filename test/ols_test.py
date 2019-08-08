@@ -33,3 +33,22 @@ def test_result_type(target_for_test):
         features_type=olm.FeatureType.rolling_std_log)
     ols_result_df: pd.DataFrame = olm.ols_in_group(target_for_test, features)
     assert (ols_result_df.apply(type) == RegressionResultsWrapper).all()
+
+
+def test_read_ols_result_success():
+    # 选择几种FeatureType 查看读取过程中是否有错误
+    olm.read_ols_results_df(olm.FeatureType.market_ret)
+    olm.read_ols_results_df(olm.FeatureType.delta_std_full_sign_rm)
+
+
+def test_read_ols_result_shape():
+    # 测试不同style 参数传入后的结果
+    portrait_df: pd.DataFrame = olm.read_ols_results_df(
+        ols_features_type=olm.FeatureType.delta_std_full_sign,
+        style='portrait')
+    assert portrait_df.shape == (25, )
+
+    landscape_df: pd.DataFrame = olm.read_ols_results_df(
+        ols_features_type=olm.FeatureType.delta_std_full_sign,
+        style='landscape')
+    assert landscape_df.shape == (5, 5)

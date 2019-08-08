@@ -224,16 +224,16 @@ def ols_in_group(target: pd.Series,
     return ols_series_reindexed
 
 
-def read_ols_results_df(ols_features_type: str, style: str = 'landscape'):
+def read_ols_results_df(ols_features_type: FeatureType,
+                        style: str = 'landscape'):
     """
     根据ols_features_type 指定的ols 模型features 类型，返回使用该features 拟合得到的一组OLSRsults
 
     Parameters:
     -----------
     ols_features_type:
-        str
+        FeatureType
         指定想要读取的OLS 模型建立时使用的features 类型
-        包括market_ret, rolling_std_log, delta_std, delta_std_and_rm
     style:
         {'landscape', 'portrait'}, default 'landscape'
         指定返回DataFrame 的样式：
@@ -251,7 +251,7 @@ def read_ols_results_df(ols_features_type: str, style: str = 'landscape'):
                      ], "Ivalid data frame construction {}".format(style)
 
     # 从保存的文件中读取ols_results DataFrame
-    file_path = 'models/ols_with_' + ols_features_type + '.pickle'
+    file_path = 'models/ols_on_' + ols_features_type.value + '.pickle'
     ols_results_df: pd.DataFrame = pd.read_pickle(file_path)
 
     # 根据style 的要求，返回所需的表格样式
