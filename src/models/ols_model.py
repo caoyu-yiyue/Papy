@@ -4,34 +4,88 @@ import pandas as pd
 from src.features import process_data_api as proda
 import statsmodels.api as sm
 import click
+from enum import Enum
 
 
-def select_features(features_type: str):
+class FeatureType(Enum):
+    """
+    用于枚举回归feature 类型的Enum
+    """
+    # 原论文中的部分
+    market_ret = 'mkt'
+    rolling_std_log = 'std'
+    delta_std = 'delta_std'
+    delta_std_and_rm = 'delta_std_rm'
+
+    # 新增加的部分
+    delta_std_full = 'delta_std_full'
+    amihud = 'amihud'
+    turnover = 'turnover'
+
+    # 加上sign 的部分
+    std_with_sign = 'std_with_sign'
+    delta_std_full_sign = 'delta_std_full_sign'
+    delta_std_full_sign_rm = 'delta_std_full_sign_rm'
+
+
+def select_features(features_type: FeatureType):
     """
     输入一种features 类型，返回相应类型的features
     Parameters:
     -----------
     features_type:
-        str
+        FeatureType
         指定想要返回的features 类型
 
     Results:
     --------
-    pd.DataFrame
-    返回的features 数据框
+    pd.Series, pd.DataFrame or tuple of them.
+        返回的features，如果是多个则返回为一个tuple
     """
 
-    if features_type == 'market_ret':
+    if features_type == FeatureType.market_ret:
         features = proda.get_rm_features()
-    elif features_type == 'rolling_std_log':
+    elif features_type == FeatureType.rolling_std_log:
         features = proda.get_rolling_std_features()
-    elif features_type == 'delta_std':
+    elif features_type == FeatureType.delta_std:
         features = proda.get_delta_std_features()
-    elif features_type == 'delta_std_and_rm':
+    elif features_type == FeatureType.delta_std_and_rm:
         # 指定该类型时，使用未来的市场收益率数据、合并上未来的波动率变动数据，一起返回
         rm_features: pd.DataFrame = proda.get_rm_features()
         delta_std = proda.get_delta_std_features()
         features = rm_features.merge(delta_std, on='Trddt')
+
+    elif features_type == FeatureType.delta_std_full:
+        # 返回整个未来区间内的std 变动量
+        features = proda.get_delta_std_forward_interval()
+    elif features_type == FeatureType.amihud:
+        # 返回amihud 值
+        features = proda.get_amihud_features()
+    elif features_type == FeatureType.turnover:
+        # 返回turnover 值
+        features = proda.get_turnover_features()
+
+    elif features_type == FeatureType.std_with_sign:
+        # 返回波动率(std)、组合收益率虚拟变量、及二者交互项
+        std_features = proda.get_rolling_std_features()
+        ret_sign = proda.get_ret_sign()
+        std_with_sign = proda.features_mul_dummy(std_features, ret_sign)
+        features = (ret_sign, std_features, std_with_sign)
+    elif features_type == FeatureType.delta_std_full_sign:
+        # 返回整个区间中波动率(std)变动、组合收益率虚拟变量、及二者交互
+        delta_std_full: pd.Series = proda.get_delta_std_forward_interval()
+        ret_sign: pd.Series = proda.get_ret_sign()
+        delta_full_with_sign: pd.Series = proda.features_mul_dummy(
+            delta_std_full, ret_sign)
+        features = (ret_sign, delta_std_full, delta_full_with_sign)
+    elif features_type == FeatureType.delta_std_full_sign_rm:
+        # 返回整个区间中波动率（std）变动、组合收益率正负虚拟变量、二者交互、市场过去五天收益做控制
+        ret_sign = proda.get_ret_sign()
+        delta_std_full = proda.get_delta_std_forward_interval()
+        delta_full_with_sign = proda.features_mul_dummy(
+            delta_std_full, ret_sign)
+        mkt_5day = proda.get_rm_features()
+        features = (ret_sign, delta_std_full, delta_full_with_sign, mkt_5day)
     else:
         print('Unknown features type passed.')
 
@@ -123,8 +177,8 @@ def ols_in_group(target: pd.Series,
             ), 'Parameter \'merge_on\' must be None or as long as \'features\''
 
     # 判定输入的类型，统一转置为DataFrame 然后合并
-    if isinstance(features, list):
-        combine_list = features
+    if isinstance(features, (list, tuple)):
+        combine_list = list(features)
     elif isinstance(features, pd.DataFrame) or isinstance(features, pd.Series):
         combine_list = [features]
     else:
@@ -213,10 +267,7 @@ def read_ols_results_df(ols_features_type: str, style: str = 'landscape'):
 
 @click.command()
 @click.option('--featurestype',
-              type=click.Choice([
-                  'market_ret', 'rolling_std_log', 'delta_std',
-                  'delta_std_and_rm'
-              ]),
+              type=click.Choice([e.value for e in FeatureType]),
               help='select the features\' type being to use')
 @click.argument('output_file', type=click.Path(writable=True))
 def main(featurestype, output_file):
@@ -239,7 +290,8 @@ def main(featurestype, output_file):
 
     # 获取到targets 和features
     targets_series: pd.Series = proda.get_targets()
-    features: pd.DataFrame = select_features(features_type=featurestype)
+    features: pd.DataFrame = select_features(
+        features_type=FeatureType(featurestype))
 
     # 对targets 和features 进行回归。其中，merger_on_col 为None，默认使用features 的index
     ols_results_df = ols_in_group(targets_series, features)
