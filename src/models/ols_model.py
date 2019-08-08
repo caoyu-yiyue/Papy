@@ -246,9 +246,11 @@ def read_ols_results_df(ols_features_type: FeatureType,
         相应的ols_features_type 生成的一组OLS Results 数据框
     """
 
-    # 断言返回的模式在需要的两种之一
-    assert style in ['portrait', 'landscape'
-                     ], "Ivalid data frame construction {}".format(style)
+    # 确定返回的模式在需要的两种之一
+    if style not in {'portrait', 'landscape'}:
+        msg = "style must be 'portrait' or 'landscape',{} is invalied.".format(
+            style)
+        raise ValueError(msg)
 
     # 从保存的文件中读取ols_results DataFrame
     file_path = 'models/ols_on_' + ols_features_type.value + '.pickle'

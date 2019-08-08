@@ -52,3 +52,11 @@ def test_read_ols_result_shape():
         ols_features_type=olm.FeatureType.delta_std_full_sign,
         style='landscape')
     assert landscape_df.shape == (5, 5)
+
+    with pytest.raises(ValueError) as e_info:
+        olm.read_ols_results_df(
+            ols_features_type=olm.FeatureType.delta_std_full_sign,
+            style='test')
+        assert str(
+            e_info.value
+        ) == "style must be 'portait' or 'landscape',test is invalied."
