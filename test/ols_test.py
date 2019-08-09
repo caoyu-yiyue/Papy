@@ -96,7 +96,7 @@ class Test_look_result_detail(object):
                                          column=2)
         use_str = olm.look_up_ols_detail(ols_result_df,
                                          detail='pvalue',
-                                         column='delta_std_full_interval')
+                                         column='delta_std_full')
 
         assert use_int.eq(use_str).all().all()
 

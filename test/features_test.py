@@ -44,7 +44,7 @@ class Test_std_features(object):
 
         assert mkt_index.iloc[5:25].std() - mkt_index.iloc[0:20].std(
         ) == pytest.approx(delta_std_full[24])
-    
+
     def test_get_std(self):
         proda.get_delta_std_features()
         proda.get_delta_std_features()
@@ -126,3 +126,14 @@ class Test_ret_sign(object):
         assert isinstance(targets, type(multipied))
         assert all(multipied[multipied == 0.0].index == std_features[
             std_features == 0.0].index)
+
+    def test_feature_mul_dummy_name(self):
+        std_features = proda.get_rolling_std_features()
+        delta_std_features = proda.get_delta_std_features()
+        ret_sign = proda.get_ret_sign()
+
+        std_multiplied = proda.features_mul_dummy(std_features, ret_sign)
+        delta_std_multipied: pd.DataFrame = proda.features_mul_dummy(
+            delta_std_features, ret_sign)
+        assert std_multiplied.name == 'rolling_std_log_ret_sign'
+        assert delta_std_multipied.columns[0] == 'delta_std_t_1_ret_sign'

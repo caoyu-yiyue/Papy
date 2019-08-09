@@ -216,6 +216,12 @@ def features_mul_dummy(features, dummy, broadcast_level='Trddt'):
     """
 
     features_with_dummy = features.mul(dummy, axis=0, level=broadcast_level)
+    if isinstance(features_with_dummy, pd.Series):
+        s_name = features.name + '_' + dummy.name
+        features_with_dummy.rename(s_name, inplace=True)
+    elif isinstance(features_with_dummy, pd.DataFrame):
+        features_with_dummy.rename(
+            columns=lambda col_name: col_name + '_' + dummy.name, inplace=True)
     return features_with_dummy
 
 
@@ -342,7 +348,7 @@ def get_delta_std_forward_interval(file='data/processed/std_features.pickle'):
         pd.Series
     """
     std_dframe = pd.read_pickle(file)
-    delta_std_full = std_dframe['delta_std_full_interval']
+    delta_std_full = std_dframe['delta_std_full']
     return delta_std_full
 
 

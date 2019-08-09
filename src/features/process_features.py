@@ -40,7 +40,7 @@ def main(which, windows, input_file, output_file):
         std_features: pd.DataFrame = proda.shift_leading_gradually(
             delta_std.reindex(year_index), col_name_prefix='delta_std')
         std_features['rolling_std_log'] = rolling_std_log
-        std_features['delta_std_full_interval'] = delta_std_forward
+        std_features['delta_std_full'] = delta_std_forward
         features_df: pd.DataFrame = std_features
     elif which == 'turnover':
         # 计算组合的turnover，依赖向前和向后的窗口长度
