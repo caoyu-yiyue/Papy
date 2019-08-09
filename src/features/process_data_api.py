@@ -335,7 +335,9 @@ def get_delta_std_features(file='data/processed/std_features.pickle'):
     """
 
     std_dframe = pd.read_pickle(file)
-    delta_std_col = [col for col in std_dframe if col.startswith('delta_')]
+    delta_std_col = [
+        col for col in std_dframe if col.startswith('delta_std_t')
+    ]
     return std_dframe[delta_std_col]
 
 
