@@ -267,6 +267,83 @@ def read_ols_results_df(ols_features_type: FeatureType,
     return returned_ols_results
 
 
+# 查看回归结果的函数
+def _star_df(pvalue):
+    """
+    float -> str
+    输入一个p 值，返回对应的星号。用于apply 中调用。
+    """
+    if pvalue <= 0.01:
+        return '***'
+    elif pvalue <= 0.05:
+        return '**'
+    elif pvalue <= 0.1:
+        return '*'
+    else:
+        return ''
+
+
+def look_up_ols_detail(ols_result_df: pd.DataFrame,
+                       detail,
+                       column=None,
+                       t_test_str=None):
+
+    # 检查detail 在需要的范围内
+    if detail not in {
+            'param', 'pvalue', 'pvalue_star', 't_test', 't_test_star'
+    }:
+        raise ValueError(
+            "detail must be on of 'param', 'pvalue', 'pvalue_star',\
+            't_test', 't_test_star'")
+
+    # 检查detail 为t 检验时，t_test_str 必须有值
+    if detail.startswith('t_test') and not isinstance(t_test_str, str):
+        msg = "Must provide t_test_str when ask for t test"
+        raise ValueError(msg)
+
+    # 如果传入的结果类型是Series，则要将其变为DataFrame
+    if isinstance(ols_result_df, pd.Series):
+        ols_result_df: pd.DataFrame = ols_result_df.unstack()
+
+    if detail == 'param':
+        result_df = ols_result_df.applymap(
+            lambda ols_result: ols_result.params[column].round(4))
+
+    # pvalues
+    elif detail == 'pvalue':
+        # 返回系数p 值本值
+        result_df = ols_result_df.applymap(
+            lambda ols_result: ols_result.pvalues[column].round(4))
+    elif detail == 'pvalue_star':
+        # 返回带星号的系数p 值
+        pvalue_df: pd.DataFrame = look_up_ols_detail(ols_result_df,
+                                                     'pvalue',
+                                                     column=column)
+        star_df: pd.DataFrame = pvalue_df.applymap(_star_df)
+        df_add_star: pd.DataFrame = pvalue_df.applymap(
+            lambda pvalue: format(pvalue, '.4f')) + star_df
+        result_df = df_add_star
+
+    # t_test
+    elif detail == 't_test':
+        # 返回t 检验的t 值本值
+        result_df = ols_result_df.applymap(
+            lambda ols_result: ols_result.t_test(t_test_str).tvalue.item())
+    elif detail == 't_test_star':
+        # 返回带星号的t 值
+        pvalue_df = ols_result_df.applymap(
+            lambda ols_result: ols_result.t_test(t_test_str).pvalue.item())
+        star_df: pd.DataFrame = pvalue_df.applymap(_star_df)
+        tvalue_df: pd.DataFrame = look_up_ols_detail(ols_result_df,
+                                                     detail='t_test',
+                                                     column=column,
+                                                     t_test_str=t_test_str)
+        result_df = tvalue_df.applymap(
+            lambda pvalue: format(pvalue, '.4f')) + star_df
+
+    return result_df
+
+
 @click.command()
 @click.option('--featurestype',
               type=click.Choice([e.value for e in FeatureType]),
