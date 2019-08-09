@@ -59,6 +59,13 @@ def read_market_index_data(file='data/raw/raw_data.h5'):
     return market_index.sort_index()
 
 
+def read_three_factors(file='data/raw/raw_data.h5'):
+    """读取三因子"""
+
+    three_factors: pd.DataFrame = pd.read_hdf(file, key='three_factors')
+    return three_factors
+
+
 ###############################################################################
 # 1. 删除宣发日以及后一日的股票
 ###############################################################################
