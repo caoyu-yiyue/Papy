@@ -287,6 +287,29 @@ def look_up_ols_detail(ols_result_df: pd.DataFrame,
                        detail,
                        column=None,
                        t_test_str=None):
+    """
+    返回一个OLSRsults 对象组成的DataFrame 的系数、pvalue、tvalue 等细节
+
+    Parameters:
+    -----------
+    ols_result_df:
+        pd.DataFrame or pd.Series
+        存储OLSRsults 对象的DataFrame
+    detail:
+        str
+        需要的结果细节的类型
+        可选范围是{'param', 'pvalue', 'pvalue_star', 't_test', 't_test_star'}
+    column:
+        str or int
+        需要返回的结果所在的列名，或它在回归结果中的index 数
+    t_test_str:
+        若需要返回的是t 检验相关的结果，则需要指定检验公式，以str 提供如'const = 0'
+
+    Returns:
+    --------
+        pd.DataFrame
+        存储所需的OLS 回归结果细节的数据框
+    """
 
     # 检查detail 在需要的范围内
     if detail not in {
