@@ -381,6 +381,10 @@ def get_ret_sign(file='data/processed/ret_sign.pickle'):
     return pd.read_pickle(file)
 
 
+def get_three_factors(file='data/processed/three_factors.pickle'):
+    return pd.read_pickle(file)
+
+
 def get_targets(file='data/processed/targets.pickle'):
     """
     从保存的文件中读取OLS 回归所用的targets，即超额收益率计算的反转组合收益

@@ -59,10 +59,13 @@ data/processed/amihud_features.pickle: data/processed/targets.pickle data/interi
 data/processed/ret_sign.pickle: data/processed/targets.pickle
 	python3 src/features/process_features.py --which ret_sign $< $@
 
+data/processed/three_factors.pickle: data/processed/targets.pickle
+	python3 src/features/process_features.py --which 3_fac $< $@
+
 # process OLS features and targets data frame
 features: data/processed/rm_features.pickle data/processed/std_features.pickle \
 data/processed/turnover_features.pickle data/processed/amihud_features.pickle \
-data/processed/ret_sign.pickle
+data/processed/ret_sign.pickle data/processed/three_factors.pickle
 
 # ======================================================================================================= #
 # contruct ols models data frame

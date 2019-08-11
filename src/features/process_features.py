@@ -1,15 +1,16 @@
 import pandas as pd
 import click
 from src.features import process_data_api as proda
+from src.data import preparing_data as preda
 
 
 @click.command()
-@click.option(
-    '--which',
-    help='the type of ols features data frame to generate',
-    type=click.Choice(choices=[
-        'rm_features', 'std_features', 'turnover', 'amihud', 'ret_sign'
-    ]))
+@click.option('--which',
+              help='the type of ols features data frame to generate',
+              type=click.Choice(choices=[
+                  'rm_features', 'std_features', 'turnover', 'amihud',
+                  'ret_sign', '3_fac'
+              ]))
 @click.option(
     '--windows',
     help='Backward and forward window length to calculate some features.',
@@ -20,8 +21,8 @@ from src.features import process_data_api as proda
 def main(which, windows, input_file, output_file):
 
     assert which in (
-        'rm_features', 'std_features', 'turnover', 'amihud',
-        'ret_sign'), 'Invalid type {} of features data frame'.format(which)
+        'rm_features', 'std_features', 'turnover', 'amihud', 'ret_sign',
+        '3_fac'), 'Invalid type {} of features data frame'.format(which)
 
     # 读取使用**超额收益率** 计算的反转组合收益数据框，并取出时间index
     reverse_ret_dframe: pd.Series = proda.get_targets(input_file)
@@ -58,6 +59,9 @@ def main(which, windows, input_file, output_file):
     elif which == 'ret_sign':
         # 计算表示组合收益正负的虚拟变量
         features_df: pd.Series = proda.calculate_ret_sign(reverse_ret_dframe)
+    elif which == '3_fac':
+        # 取出三因子
+        features_df = preda.read_three_factors().reindex(year_index)
     else:
         print('Wrong type of features data frame uncaught.')
 
