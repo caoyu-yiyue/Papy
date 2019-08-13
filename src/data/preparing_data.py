@@ -63,7 +63,7 @@ def read_three_factors(file='data/raw/raw_data.h5'):
     """读取三因子"""
 
     three_factors: pd.DataFrame = pd.read_hdf(file, key='three_factors')
-    return three_factors
+    return three_factors.sort_index()
 
 
 ###############################################################################
