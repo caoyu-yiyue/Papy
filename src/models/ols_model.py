@@ -367,12 +367,7 @@ def look_up_ols_detail(ols_result_df: pd.DataFrame,
     return result_df
 
 
-@click.command()
-@click.option('--featurestype',
-              type=click.Choice([e.value for e in FeatureType]),
-              help='select the features\' type being to use')
-@click.argument('output_file', type=click.Path(writable=True))
-def main(featurestype, output_file):
+def ols_quick(features_type: FeatureType, targets=None):
     """
     使用不同的features，对超额收益率计算的反转组合收益，进行OLS 回归。
     最终将不同组（规模 * 反转策略）的OLS 回归结果组成的pd.DataFrame 保存，
@@ -385,21 +380,50 @@ def main(featurestype, output_file):
     Parameters:
     -----------
     featurestype:
+        FeaturesType
+        进行OLS 模型设定时，使用的features 的类型
+        如[market_ret, rolling_std_log, delta_std, delta_std_and_rm]
+
+    Returns:
+    --------
+    pd.Series:
+        回归过后得出的ols 结果列
+    """
+
+    # 获取到targets 和features
+    if targets is None:
+        # 如果没有传入targets，则读取保存的targets
+        targets: pd.Series = proda.get_targets()
+    features: pd.DataFrame = select_features(features_type)
+
+    # 对targets 和features 进行回归。其中，merger_on_col 为None，默认使用features 的index
+    ols_results_series: pd.Series = ols_in_group(targets, features)
+
+    return ols_results_series
+
+
+@click.command()
+@click.option('--featurestype',
+              type=click.Choice([e.value for e in FeatureType]),
+              help='select the features\' type being to use')
+@click.argument('output_file', type=click.Path(writable=True))
+def main(featurestype, output_file):
+    """
+    调用ols_quick() 计算分组ols 的结果
+
+    Parameters:
+    -----------
+    featurestype:
         str
         进行OLS 模型设定时，使用的features 的类型
         如[market_ret, rolling_std_log, delta_std, delta_std_and_rm]
     """
 
-    # 获取到targets 和features
-    targets_series: pd.Series = proda.get_targets()
-    features: pd.DataFrame = select_features(
-        features_type=FeatureType(featurestype))
-
-    # 对targets 和features 进行回归。其中，merger_on_col 为None，默认使用features 的index
-    ols_results_df = ols_in_group(targets_series, features)
+    # 使用ols_quick 进行回归。
+    ols_results_series = ols_quick(features_type=FeatureType(featurestype))
 
     # 保存结果
-    ols_results_df.to_pickle(output_file)
+    ols_results_series.to_pickle(output_file)
 
 
 if __name__ == "__main__":

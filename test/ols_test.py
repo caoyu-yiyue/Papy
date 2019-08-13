@@ -35,6 +35,19 @@ class Test_ols_process(object):
                                                        features)
         assert (ols_result_df.apply(type) == RegressionResultsWrapper).all()
 
+    def test_ols_quick(self, target_for_test):
+        result_quick = olm.ols_quick(
+            features_type=olm.FeatureType.delta_std_full_sign)
+        olm.ols_quick(features_type=olm.FeatureType.delta_std_full_sign,
+                      targets=target_for_test)
+
+        # 与单独指定targets 与features 时的结果对比
+        features = olm.select_features(
+            features_type=olm.FeatureType.delta_std_full_sign)
+        result_origin = olm.ols_in_group(target=target_for_test,
+                                         features=features)
+        assert result_quick[0].params.equals(result_origin[0].params)
+
 
 class Test_read_ols_result(object):
     def test_read_ols_result_success(self):

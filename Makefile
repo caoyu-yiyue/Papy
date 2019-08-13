@@ -1,6 +1,6 @@
 # set .PHONY
-.PHONY: all clean clean_targets clean_features clean_models clean_all\
- build_from_h5 features ols_models
+.PHONY: all all_from_h5 all_verbose clean clean_targets clean_features\
+clean_models clean_all build_from_h5 features ols_models
 
 # clean models' targets
 clean_targets:
@@ -97,17 +97,17 @@ models/ols_on_delta_std_full.pickle: data/processed/std_features.pickle data/pro
 	python3 src/models/ols_model.py --featurestype delta_std_full $@
 
 # 6. ols on std log and ret sign dummy
-models/ols_on_std_with_sign.pickle: data/processed/std_features.pickle data/processed/ret_sign.pickle \
+models/ols_on_std_with_sign.pickle: data/processed/std_features.pickle data/processed/ret_sign_features.pickle \
 data/processed/targets.pickle
 	python3 src/models/ols_model.py --featurestype std_with_sign $@
 
 # 7. ols on delta std full and ret sign dummy
-models/ols_on_delta_std_full_sign.pickle: data/processed/std_features.pickle data/processed/ret_sign.pickle \
+models/ols_on_delta_std_full_sign.pickle: data/processed/std_features.pickle data/processed/ret_sign_features.pickle \
 data/processed/targets.pickle
 	python3 src/models/ols_model.py --featurestype delta_std_full_sign $@
 
 # 8. ols on delta std full, return sign dummy and mkt
-models/ols_on_delta_std_full_sign_rm.pickle: data/processed/std_features.pickle data/processed/ret_sign.pickle \
+models/ols_on_delta_std_full_sign_rm.pickle: data/processed/std_features.pickle data/processed/ret_sign_features.pickle \
 data/processed/targets.pickle
 	python3 src/models/ols_model.py --featurestype delta_std_full_sign_rm $@
 
@@ -117,7 +117,13 @@ ols_models: models/ols_on_mkt.pickle models/ols_on_std.pickle models/ols_on_delt
  models/ols_on_delta_std_rm.pickle models/ols_on_delta_std_full.pickle models/ols_on_std_with_sign.pickle \
  models/ols_on_delta_std_full_sign.pickle models/ols_on_delta_std_full_sign_rm.pickle
 
-build_from_h5: data/interim/prepared_data.pickle data/interim/reverse_port_ret.pickle\
-data/processed/targets.pickle features ols_models
+##################################################################################################################
+# 从raw_data.h5 开始build，但不包括ols 拟合的结果
+all_from_h5: data/interim/prepared_data.pickle data/interim/reverse_port_ret.pickle\
+data/processed/targets.pickle features
 
+# 所有的文件，但不包括ols 拟合的结果
 all: data/raw/raw_data.h5 build_from_h5
+
+# 包括raw_data.h5 和ols 拟合结果在内的全部文件
+all_verbose: data/raw/raw_data.h5 build_from_h5 ols_model
