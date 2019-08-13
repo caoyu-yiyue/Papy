@@ -1,5 +1,5 @@
 # set .PHONY
-.PHONY: all clean clean_targets clean_features clean_models\
+.PHONY: all clean clean_targets clean_features clean_models clean_all\
  build_from_h5 features ols_models
 
 # clean models' targets
@@ -14,10 +14,17 @@ clean_features:
 clean_models:
 	rm -f models/*.pickle
 
-# clean all generated file
+# clean all files but no raw data file
 clean:
+	rm -f data/interim/*.pickle
+	rm -f data/processed/*.pickle
+	rm -f data/external/*.pickle
+	rm -f models/*.pickle
+
+
+# clean all generated file
+clean_all:
 	rm -f data/raw/*.h5
-	rm -f data/interim/*.h5
 	rm -f data/interim/*.pickle
 	rm -f data/processed/*.pickle
 	rm -f data/external/*.pickle
@@ -56,16 +63,16 @@ data/interim/prepared_data.pickle data/raw/raw_data.h5
 data/processed/amihud_features.pickle: data/processed/targets.pickle data/interim/prepared_data.pickle 
 	python3 src/features/process_features.py --which amihud --windows 60 5 $< $@
 
-data/processed/ret_sign.pickle: data/processed/targets.pickle
+data/processed/ret_sign_features.pickle: data/processed/targets.pickle
 	python3 src/features/process_features.py --which ret_sign $< $@
 
-data/processed/three_factors.pickle: data/processed/targets.pickle
+data/processed/three_factors_features.pickle: data/processed/targets.pickle
 	python3 src/features/process_features.py --which 3_fac $< $@
 
 # process OLS features and targets data frame
 features: data/processed/rm_features.pickle data/processed/std_features.pickle \
 data/processed/turnover_features.pickle data/processed/amihud_features.pickle \
-data/processed/ret_sign.pickle data/processed/three_factors.pickle
+data/processed/ret_sign_features.pickle data/processed/three_factors_features.pickle
 
 # ======================================================================================================= #
 # contruct ols models data frame
@@ -111,6 +118,6 @@ ols_models: models/ols_on_mkt.pickle models/ols_on_std.pickle models/ols_on_delt
  models/ols_on_delta_std_full_sign.pickle models/ols_on_delta_std_full_sign_rm.pickle
 
 build_from_h5: data/interim/prepared_data.pickle data/interim/reverse_port_ret.pickle\
-features data/processed/targets.pickle ols_models
+data/processed/targets.pickle features ols_models
 
 all: data/raw/raw_data.h5 build_from_h5

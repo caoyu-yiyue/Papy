@@ -377,11 +377,11 @@ def get_amihud_features(file='data/processed/amihud_features.pickle'):
     return pd.read_pickle(file)
 
 
-def get_ret_sign(file='data/processed/ret_sign.pickle'):
+def get_ret_sign(file='data/processed/ret_sign_features.pickle'):
     return pd.read_pickle(file)
 
 
-def get_three_factors(file='data/processed/three_factors.pickle'):
+def get_three_factors(file='data/processed/three_factors_features.pickle'):
     return pd.read_pickle(file)
 
 
