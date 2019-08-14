@@ -364,7 +364,7 @@ def look_up_ols_detail(ols_result_df: pd.DataFrame,
         result_df = tvalue_df.applymap(
             lambda pvalue: format(pvalue, '.4f')) + star_df
 
-    return result_df
+    return result_df.rename_axis(index=None, columns=None)
 
 
 def ols_quick(features_type: FeatureType, targets=None):
