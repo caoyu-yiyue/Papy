@@ -19,6 +19,7 @@ class FeatureType(Enum):
 
     # 新增加的部分
     delta_std_full = 'delta_std_full'
+    delta_std_full_rm = 'delta_std_full_rm'
     amihud = 'amihud'
     turnover = 'turnover'
 
@@ -58,6 +59,10 @@ def select_features(features_type: FeatureType):
     elif features_type == FeatureType.delta_std_full:
         # 返回整个未来区间内的std 变动量
         features = proda.get_delta_std_forward_interval()
+    elif features_type == FeatureType.delta_std_full_rm:
+        rm_features = proda.get_rm_features()
+        delta_full = proda.get_delta_std_forward_interval()
+        features = (delta_full, rm_features)
     elif features_type == FeatureType.amihud:
         # 返回amihud 值
         features = proda.get_amihud_features()
