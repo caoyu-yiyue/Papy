@@ -42,17 +42,19 @@ data/interim/prepared_data.pickle: data/raw/raw_data.h5
 data/interim/reverse_port_ret.pickle: data/interim/prepared_data.pickle
 	python3 src/features/reverse_port_ret.py $< $@
 
+# ===================================== process data ============================================== #
+
 # caculate a reverse porfolie return as target using the excess return for cumulate.
 data/processed/targets.pickle: data/interim/prepared_data.pickle
-	python3 src/features/reverse_exc_ret.py $@
+	python3 src/features/reverse_exc_ret.py --windows 60 5 $@
 
 # process OLS rm_features data frame
 data/processed/rm_features.pickle: data/processed/targets.pickle
-	python3 src/features/process_features.py --which rm_features $< $@
+	python3 src/features/process_features.py --which rm_features --windows 60 5 $< $@
 
 # process OLS std_features data frame
 data/processed/std_features.pickle: data/processed/targets.pickle
-	python3 src/features/process_features.py --which std_features $< $@
+	python3 src/features/process_features.py --which std_features --windows 60 5 $< $@
 
 # process OlS turnover features
 data/processed/turnover_features.pickle: data/processed/targets.pickle \
