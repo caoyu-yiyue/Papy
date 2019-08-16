@@ -29,7 +29,8 @@ def main(which, windows, input_file, output_file):
     year_index: pd.Series = proda.obtain_feature_index(reverse_ret_dframe)
 
     # 取出过去和未来的窗口长度
-    backward, forward = windows
+    if len(windows) != 0:
+        backward, forward = windows
 
     if which == 'rm_features':
         # 使用市场超额收益率，错位算出未来t+1,...t+forward 期的列，作为一个features 保存
