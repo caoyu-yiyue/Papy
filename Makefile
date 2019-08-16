@@ -48,33 +48,13 @@ data/interim/reverse_port_ret.pickle: data/interim/prepared_data.pickle
 data/processed/targets.pickle: data/interim/prepared_data.pickle
 	python3 src/features/reverse_exc_ret.py --windows 60 5 $@
 
-# process OLS rm_features data frame
-data/processed/rm_features.pickle: data/processed/targets.pickle
-	python3 src/features/process_features.py --which rm_features --windows 60 5 $< $@
+# 定义features 类别，并据此定义所需的target 文件路径，在向shell 传递--which 参数时，再将features type 的核心部分取出来。
+FEATURESTYPE:= rm_features std_features turnover_features amihud_features ret_sign_features 3_fac_features
+features_target:= $(addsuffix .pickle, $(addprefix data/processed/, $(FEATURESTYPE)))
+$(features_target): data/processed/targets.pickle
+	python3 src/features/process_features.py --which $(subst data/processed/, ,$(basename $@)) --windows 60 5 $< $@
 
-# process OLS std_features data frame
-data/processed/std_features.pickle: data/processed/targets.pickle
-	python3 src/features/process_features.py --which std_features --windows 60 5 $< $@
-
-# process OlS turnover features
-data/processed/turnover_features.pickle: data/processed/targets.pickle \
-data/interim/prepared_data.pickle data/raw/raw_data.h5
-	python3 src/features/process_features.py --which turnover --windows 60 5 $< $@
-
-# process amihud features series
-data/processed/amihud_features.pickle: data/processed/targets.pickle data/interim/prepared_data.pickle 
-	python3 src/features/process_features.py --which amihud --windows 60 5 $< $@
-
-data/processed/ret_sign_features.pickle: data/processed/targets.pickle
-	python3 src/features/process_features.py --which ret_sign $< $@
-
-data/processed/three_factors_features.pickle: data/processed/targets.pickle
-	python3 src/features/process_features.py --which 3_fac $< $@
-
-# process OLS features and targets data frame
-features: data/processed/rm_features.pickle data/processed/std_features.pickle \
-data/processed/turnover_features.pickle data/processed/amihud_features.pickle \
-data/processed/ret_sign_features.pickle data/processed/three_factors_features.pickle
+features: $(features_target)
 
 # ======================================================================================================= #
 # contruct ols models data frame

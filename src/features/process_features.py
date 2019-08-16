@@ -8,8 +8,8 @@ from src.data import preparing_data as preda
 @click.option('--which',
               help='the type of ols features data frame to generate',
               type=click.Choice(choices=[
-                  'rm_features', 'std_features', 'turnover', 'amihud',
-                  'ret_sign', '3_fac'
+                  'rm_features', 'std_features', 'turnover_features',
+                  'amihud_features', 'ret_sign_features', '3_fac_features'
               ]))
 @click.option(
     '--windows',
@@ -19,10 +19,6 @@ from src.data import preparing_data as preda
 @click.argument('input_file', type=click.Path(exists=True, readable=True))
 @click.argument('output_file', type=click.Path(writable=True))
 def main(which, windows, input_file, output_file):
-
-    assert which in (
-        'rm_features', 'std_features', 'turnover', 'amihud', 'ret_sign',
-        '3_fac'), 'Invalid type {} of features data frame'.format(which)
 
     # 读取使用**超额收益率** 计算的反转组合收益数据框，并取出时间index
     reverse_ret_dframe: pd.Series = proda.get_targets(input_file)
@@ -52,21 +48,21 @@ def main(which, windows, input_file, output_file):
         std_features['rolling_std_log'] = rolling_std_log
         std_features['delta_std_full'] = delta_std_forward
         features_df: pd.DataFrame = std_features
-    elif which == 'turnover':
+    elif which == 'turnover_features':
         # 计算组合的turnover，依赖向前和向后的窗口长度
         turnover_series: pd.Series = proda.calculate_turnover(
             backward, forward)
         features_df: pd.Series = turnover_series.reindex(year_index,
                                                          level='Trddt')
-    elif which == 'amihud':
+    elif which == 'amihud_features':
         # 计算组合的Amihud 指标，依赖向前和向后的窗口长度
         amihud_series: pd.Series = proda.calculate_amihud(backward, forward)
         features_df: pd.Series = amihud_series.reindex(year_index,
                                                        level='Trddt')
-    elif which == 'ret_sign':
+    elif which == 'ret_sign_features':
         # 计算表示组合收益正负的虚拟变量
         features_df: pd.Series = proda.calculate_ret_sign(reverse_ret_dframe)
-    elif which == '3_fac':
+    elif which == '3_fac_features':
         # 取出三因子
         features_df = preda.read_three_factors().reindex(year_index)
     else:
