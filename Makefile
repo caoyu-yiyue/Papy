@@ -1,7 +1,18 @@
 # set .PHONY
 .PHONY: all all_from_h5 all_verbose clean clean_targets clean_features\
-clean_models clean_all build_from_h5 features ols_models
+clean_models clean_all features ols_models robost
 
+# 从raw_data.h5 开始build，但不包括ols 拟合的结果
+all_from_h5: data/interim/prepared_data.pickle data/interim/reverse_port_ret.pickle\
+data/processed/targets.pickle features robost
+
+# 所有的文件，但不包括ols 拟合的结果
+all: data/raw/raw_data.h5 all_from_h5
+
+# 包括raw_data.h5 和ols 拟合结果在内的全部文件
+all_verbose: data/raw/raw_data.h5 all_from_h5 ols_model
+
+# ====================================== clean =============================================== #
 # clean models' targets
 clean_targets:
 	rm -f data/processed/*targets.pickle
@@ -100,12 +111,24 @@ ols_models: models/ols_on_mkt.pickle models/ols_on_std.pickle models/ols_on_delt
  models/ols_on_delta_std_full_sign.pickle models/ols_on_delta_std_full_sign_rm.pickle
 
 ##################################################################################################################
-# 从raw_data.h5 开始build，但不包括ols 拟合的结果
-all_from_h5: data/interim/prepared_data.pickle data/interim/reverse_port_ret.pickle\
-data/processed/targets.pickle features
 
-# 所有的文件，但不包括ols 拟合的结果
-all: data/raw/raw_data.h5 build_from_h5
+# ===================================== robost test ============================================== #
+backward:= 40
+forward:= 5
+rob_dir:= data/robost/b$(backward)_f$(forward)
 
-# 包括raw_data.h5 和ols 拟合结果在内的全部文件
-all_verbose: data/raw/raw_data.h5 build_from_h5 ols_model
+$(rob_dir):
+	mkdir $(rob_dir)
+
+$(rob_dir)/targets.pickle: data/interim/prepared_data.pickle | $(rob_dir)
+	python3 src/features/reverse_exc_ret.py --windows $(backward) $(forward) $@
+
+rob_features:= $(addsuffix .pickle, $(addprefix $(rob_dir)/, $(FEATURESTYPE)))
+$(rob_features): $(rob_dir)/targets.pickle | $(rob_dir)
+	python3 src/features/process_features.py --which $(subst $(rob_dir)/, ,$(basename $@)) --windows $(backward) $(forward) $< $@
+
+rob_test: $(rob_dir) $(rob_dir)/targets.pickle $(rob_features)
+
+robost:
+	$(MAKE) rob_test backward=40 forward=5 &
+	$(MAKE) rob_test backward=20 forward=5 &
