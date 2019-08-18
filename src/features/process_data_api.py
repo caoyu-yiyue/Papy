@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 from src.data import preparing_data as predata
 from src.features import reverse_port_ret as rpt
+from enum import Enum
 
 
 def obtain_feature_index(reverse_ret_dframe: pd.DataFrame):
@@ -262,6 +263,55 @@ def shift_leading_gradually(benchmark: pd.Series,
                              '_t_{}'.format(index)] = shifted_serie
 
     return dframe_added_leading
+
+
+class ProcessedType(Enum):
+    """
+    每一种单个processed data 类型的Enum
+    """
+    targets = 'targets'
+    market_ret = 'rm_features'
+    rolling_std_log = 'std_features'
+    delta_std = 'std_features'
+    delta_std_full = 'std_features'
+    turnover = 'turnover_features'
+    amihud = 'amihud_features'
+    ret_sign = 'ret_sign_features'
+    three_fac = '3_fac_features'
+
+
+def get_processed(in_dir: str, ftype: ProcessedType):
+    """
+    读取某一种保存过的processed data
+
+    Parameters:
+    -----------
+    in_dir:
+        str
+        保存process 过后数据的文件夹名
+    ftype:
+        SingleFeaturesType
+        features 的类型
+
+    Returns:
+        pd.DataFrame or pd.Series，与保存时相同
+    """
+    # 拼接出整个的文件路径，然后将保存的数据框读取出来。
+    feature_path = in_dir + ftype.value + '.pickle'
+    feature_frame = pd.read_pickle(feature_path)
+
+    # 同框保存了多种数据，按照col name 读取相应列
+    if ftype in (ProcessedType.rolling_std_log, ProcessedType.delta_std_full):
+        return feature_frame[ftype.name]
+    # 同框保存了多种数据，需要的数据为多列时
+    elif ftype == ProcessedType.delta_std:
+        delta_std_col = [
+            col for col in feature_frame if col.startswith('delta_std_t')
+        ]
+        return feature_frame[delta_std_col]
+    # 单个的数据框即保存了所需的数据，直接读取
+    else:
+        return feature_frame
 
 
 def get_rm_features(file='data/processed/rm_features.pickle'):

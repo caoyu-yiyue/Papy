@@ -7,6 +7,14 @@ from src.data import preparing_data as preda
 targets: pd.Series = pd.read_pickle('data/processed/targets.pickle')
 
 
+def test_no_error_get_processed():
+    """
+    测试proda.get_processed() 函数针对每种ProcessedType 有无错误
+    """
+    for ftype in list(proda.ProcessedType):
+        proda.get_processed(in_dir='data/processed/', ftype=ftype)
+
+
 class Test_std_features(object):
     @pytest.fixture()
     def get_std_features(self):
