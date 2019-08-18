@@ -280,7 +280,7 @@ class ProcessedType(Enum):
     three_fac = '3_fac_features'
 
 
-def get_processed(in_dir: str, ftype: ProcessedType):
+def get_processed(from_dir: str, which: ProcessedType):
     """
     读取某一种保存过的processed data
 
@@ -297,14 +297,14 @@ def get_processed(in_dir: str, ftype: ProcessedType):
         pd.DataFrame or pd.Series，与保存时相同
     """
     # 拼接出整个的文件路径，然后将保存的数据框读取出来。
-    feature_path = in_dir + ftype.value + '.pickle'
+    feature_path = from_dir + which.value + '.pickle'
     feature_frame = pd.read_pickle(feature_path)
 
     # 同框保存了多种数据，按照col name 读取相应列
-    if ftype in (ProcessedType.rolling_std_log, ProcessedType.delta_std_full):
-        return feature_frame[ftype.name]
+    if which in (ProcessedType.rolling_std_log, ProcessedType.delta_std_full):
+        return feature_frame[which.name]
     # 同框保存了多种数据，需要的数据为多列时
-    elif ftype == ProcessedType.delta_std:
+    elif which == ProcessedType.delta_std:
         delta_std_col = [
             col for col in feature_frame if col.startswith('delta_std_t')
         ]

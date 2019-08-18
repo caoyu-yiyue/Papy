@@ -12,7 +12,7 @@ def test_no_error_get_processed():
     测试proda.get_processed() 函数针对每种ProcessedType 有无错误
     """
     for ftype in list(proda.ProcessedType):
-        proda.get_processed(in_dir='data/processed/', ftype=ftype)
+        proda.get_processed(from_dir='data/processed/', which=ftype)
 
 
 class Test_std_features(object):
