@@ -7,7 +7,7 @@ import click
 from enum import Enum
 
 
-class FeatureType(Enum):
+class OLSFeatures(Enum):
     """
     用于枚举回归feature 类型的Enum
     """
@@ -29,7 +29,7 @@ class FeatureType(Enum):
     delta_std_full_sign_rm = 'delta_std_full_sign_rm'
 
 
-def select_features(features_type: FeatureType):
+def select_features(features_type: OLSFeatures):
     """
     输入一种features 类型，返回相应类型的features
     Parameters:
@@ -44,46 +44,46 @@ def select_features(features_type: FeatureType):
         返回的features，如果是多个则返回为一个tuple
     """
 
-    if features_type == FeatureType.market_ret:
+    if features_type == OLSFeatures.market_ret:
         features = proda.get_rm_features()
-    elif features_type == FeatureType.rolling_std_log:
+    elif features_type == OLSFeatures.rolling_std_log:
         features = proda.get_rolling_std_features()
-    elif features_type == FeatureType.delta_std:
+    elif features_type == OLSFeatures.delta_std:
         features = proda.get_delta_std_features()
-    elif features_type == FeatureType.delta_std_and_rm:
+    elif features_type == OLSFeatures.delta_std_and_rm:
         # 指定该类型时，使用未来的市场收益率数据、合并上未来的波动率变动数据，一起返回
         rm_features: pd.DataFrame = proda.get_rm_features()
         delta_std = proda.get_delta_std_features()
         features = rm_features.merge(delta_std, on='Trddt')
 
-    elif features_type == FeatureType.delta_std_full:
+    elif features_type == OLSFeatures.delta_std_full:
         # 返回整个未来区间内的std 变动量
         features = proda.get_delta_std_forward_interval()
-    elif features_type == FeatureType.delta_std_full_rm:
+    elif features_type == OLSFeatures.delta_std_full_rm:
         rm_features = proda.get_rm_features()
         delta_full = proda.get_delta_std_forward_interval()
         features = (delta_full, rm_features)
-    elif features_type == FeatureType.amihud:
+    elif features_type == OLSFeatures.amihud:
         # 返回amihud 值
         features = proda.get_amihud_features()
-    elif features_type == FeatureType.turnover:
+    elif features_type == OLSFeatures.turnover:
         # 返回turnover 值
         features = proda.get_turnover_features()
 
-    elif features_type == FeatureType.std_with_sign:
+    elif features_type == OLSFeatures.std_with_sign:
         # 返回波动率(std)、组合收益率虚拟变量、及二者交互项
         std_features = proda.get_rolling_std_features()
         ret_sign = proda.get_ret_sign()
         std_with_sign = proda.features_mul_dummy(std_features, ret_sign)
         features = (ret_sign, std_features, std_with_sign)
-    elif features_type == FeatureType.delta_std_full_sign:
+    elif features_type == OLSFeatures.delta_std_full_sign:
         # 返回整个区间中波动率(std)变动、组合收益率虚拟变量、及二者交互
         delta_std_full: pd.Series = proda.get_delta_std_forward_interval()
         ret_sign: pd.Series = proda.get_ret_sign()
         delta_full_with_sign: pd.Series = proda.features_mul_dummy(
             delta_std_full, ret_sign)
         features = (ret_sign, delta_std_full, delta_full_with_sign)
-    elif features_type == FeatureType.delta_std_full_sign_rm:
+    elif features_type == OLSFeatures.delta_std_full_sign_rm:
         # 返回整个区间中波动率（std）变动、组合收益率正负虚拟变量、二者交互、市场过去五天收益做控制
         ret_sign = proda.get_ret_sign()
         delta_std_full = proda.get_delta_std_forward_interval()
@@ -229,7 +229,7 @@ def ols_in_group(target: pd.Series,
     return ols_series_reindexed
 
 
-def read_ols_results_df(ols_features_type: FeatureType,
+def read_ols_results_df(ols_features_type: OLSFeatures,
                         style: str = 'landscape'):
     """
     根据ols_features_type 指定的ols 模型features 类型，返回使用该features 拟合得到的一组OLSRsults
@@ -372,7 +372,7 @@ def look_up_ols_detail(ols_result_df: pd.DataFrame,
     return result_df.rename_axis(index=None, columns=None)
 
 
-def ols_quick(features_type: FeatureType, targets=None):
+def ols_quick(features_type: OLSFeatures, targets=None):
     """
     使用不同的features，对超额收益率计算的反转组合收益，进行OLS 回归。
     最终将不同组（规模 * 反转策略）的OLS 回归结果组成的pd.DataFrame 保存，
@@ -409,7 +409,7 @@ def ols_quick(features_type: FeatureType, targets=None):
 
 @click.command()
 @click.option('--featurestype',
-              type=click.Choice([e.value for e in FeatureType]),
+              type=click.Choice([e.value for e in OLSFeatures]),
               help='select the features\' type being to use')
 @click.argument('output_file', type=click.Path(writable=True))
 def main(featurestype, output_file):
@@ -425,7 +425,7 @@ def main(featurestype, output_file):
     """
 
     # 使用ols_quick 进行回归。
-    ols_results_series = ols_quick(features_type=FeatureType(featurestype))
+    ols_results_series = ols_quick(features_type=OLSFeatures(featurestype))
 
     # 保存结果
     ols_results_series.to_pickle(output_file)

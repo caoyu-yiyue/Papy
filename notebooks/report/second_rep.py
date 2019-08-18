@@ -37,7 +37,7 @@ std_ret.reindex(['Small', '2', '3', '4', 'Big']).rename_axis(index=None,
 
 # %%
 target = proda.get_targets()
-on_mkt: pd.Series = olm.ols_quick(features_type=olm.FeatureType.market_ret)
+on_mkt: pd.Series = olm.ols_quick(features_type=olm.OLSFeatures.market_ret)
 display(olm.look_up_ols_detail(on_mkt, detail='param', column='const'))
 display(
     olm.look_up_ols_detail(on_mkt,
@@ -51,7 +51,7 @@ display(
 
 # %%
 on_std: pd.Series = olm.ols_quick(
-    features_type=olm.FeatureType.rolling_std_log)
+    features_type=olm.OLSFeatures.rolling_std_log)
 
 display(olm.look_up_ols_detail(on_std, 'param', column='rolling_std_log'))
 display(
@@ -68,13 +68,13 @@ display(
 
 # %%
 # 使用每天的std 变动
-on_delta_std: pd.DataFrame = olm.ols_quick(olm.FeatureType.delta_std)
+on_delta_std: pd.DataFrame = olm.ols_quick(olm.OLSFeatures.delta_std)
 test_str = '+'.join(list(on_delta_std[0].params.index[1:])) + ' = 0'
 display(
     olm.look_up_ols_detail(on_delta_std, 't_test_star', t_test_str=test_str))
 
 # 使用每天的std 变动加上每天的市场超额收益进行控制
-on_delta_std_rm: pd.DataFrame = olm.ols_quick(olm.FeatureType.delta_std_and_rm)
+on_delta_std_rm: pd.DataFrame = olm.ols_quick(olm.OLSFeatures.delta_std_and_rm)
 display(
     olm.look_up_ols_detail(on_delta_std_rm, 't_test_star',
                            t_test_str=test_str))
@@ -83,12 +83,12 @@ display(
 # #### 使用五天的整体波动率变动
 # 下面直接使用五天的波动率变动进行回归，观察其系数和t 值。可见系数依然并无明显的显著性特征
 
-on_delta_full: pd.DataFrame = olm.ols_quick(olm.FeatureType.delta_std_full)
+on_delta_full: pd.DataFrame = olm.ols_quick(olm.OLSFeatures.delta_std_full)
 display(
     olm.look_up_ols_detail(on_delta_full,
                            't_test_star',
                            t_test_str='delta_std_full = 0'))
-on_delta_full_rm = olm.ols_quick(olm.FeatureType.delta_std_full_rm)
+on_delta_full_rm = olm.ols_quick(olm.OLSFeatures.delta_std_full_rm)
 
 # 加入市场进行控制
 display(
