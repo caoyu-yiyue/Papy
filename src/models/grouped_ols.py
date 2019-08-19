@@ -8,7 +8,7 @@ import re
 
 
 class GroupedOLS(object):
-    ols_dframe = None
+    _ols_dframe = None
 
     @property
     def forward_window(self):
@@ -39,6 +39,10 @@ class GroupedOLS(object):
     @property
     def ols_features(self):
         return self._ols_features
+
+    @property
+    def ols_dframe(self):
+        return self._ols_dframe
 
     # @ols_features.setter
     # def ols_features(self, value):
@@ -316,7 +320,7 @@ class GroupedOLS(object):
         ols_series_reindexed = ols_trained.reindex(
             index=['Small', '2', '3', '4', 'Big'], level=0)
 
-        self.ols_dframe = ols_series_reindexed
+        self._ols_dframe = ols_series_reindexed
 
         return self
 
@@ -360,7 +364,7 @@ class GroupedOLS(object):
         """
 
         # 取ols_dframe 属性为ols_result_df
-        ols_result_df = self.ols_dframe
+        ols_result_df = self._ols_dframe
 
         # 检查detail 在需要的范围内
         if detail not in {
