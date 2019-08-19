@@ -2,6 +2,7 @@ import pytest
 import pandas as pd
 from src.features import process_data_api as proda
 from src.models import ols_model as olm
+from src.models.grouped_ols import GroupedOLS
 from statsmodels.regression.linear_model import RegressionResultsWrapper
 
 
@@ -127,3 +128,55 @@ class Test_look_result_detail(object):
                                         t_test_str='const = 0',
                                         column=0)
         assert use_series.eq(use_df).all().all()
+
+
+class Test_objective(object):
+    @pytest.fixture
+    def grouped_ols_obj(self):
+        obj = GroupedOLS(processed_dir='data/processed/',
+                         features_type=olm.OLSFeatures.market_ret)
+        return obj
+
+    def test_get_attr(self, grouped_ols_obj):
+        """
+        测试获取属性，同时其属性的值是否符合预期
+        """
+        obj: GroupedOLS = grouped_ols_obj
+        assert obj.forward_window == 5
+        assert obj.targets.eq(
+            proda.get_processed('data/processed/',
+                                which=proda.ProcessedType.targets)).all()
+        assert obj.ols_features.dropna().eq(
+            proda.get_processed(
+                'data/processed/',
+                which=proda.ProcessedType.market_ret).dropna()).all().all()
+
+    def test_set_attr(self, grouped_ols_obj):
+        obj: GroupedOLS = grouped_ols_obj
+        obj.targets = proda.get_processed('data/processed/',
+                                          which=proda.ProcessedType.targets)
+        obj.ols_features = proda.get_processed(
+            'data/processed/', which=proda.ProcessedType.turnover)
+        obj.forward_window = 4
+
+    def test_ols_in_group(self, grouped_ols_obj):
+        obj: GroupedOLS = grouped_ols_obj
+        obj.ols_in_group()
+
+    def test_lookup_detail(self, grouped_ols_obj):
+        """
+        验证对象化接口算出来的detail 和使用function 计算的结果相同
+        """
+        obj: GroupedOLS = grouped_ols_obj
+        detail_df_from_obj = obj.ols_in_group().look_up_ols_detail(
+            'param', 'const')
+
+        targets = proda.get_processed('data/processed/',
+                                      proda.ProcessedType.targets)
+        mkt_ret = proda.get_processed('data/processed/',
+                                      proda.ProcessedType.market_ret)
+        ols_series = olm.ols_in_group(targets, mkt_ret)
+        detail_df_from_fun = olm.look_up_ols_detail(ols_result_df=ols_series,
+                                                    detail='param',
+                                                    column='const')
+        detail_df_from_fun.eq(detail_df_from_obj).all().all()
