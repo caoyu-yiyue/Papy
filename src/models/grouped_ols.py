@@ -13,59 +13,108 @@ class GroupedOLS(object):
     @property
     def forward_window(self):
         if self._processed_dir == 'data/processed/':
-            return 5
+            self._forward_window = 5
+            return self._forward_window
         else:
-            return int(
+            self._forward_window = int(
                 re.compile(r'(?<=f)\d').search(self._processed_dir).group())
+            return self._forward_window
 
-    @forward_window.setter
-    def forward_window(self, value):
-        if not isinstance(value, int):
-            raise TypeError('forward_window must be interger!')
-        self._forward_window = value
+    # @forward_window.setter
+    # def forward_window(self, value):
+    #     if not isinstance(value, int):
+    #         raise TypeError('forward_window must be interger!')
+    #     self._forward_window = value
 
     @property
     def targets(self):
         return self._targets
 
-    @targets.setter
-    def targets(self, value):
-        if not isinstance(value, (pd.Series, pd.DataFrame)):
-            raise TypeError('Targets must be pd.Series or pd.DataFrame!')
-        self._targets = value
+    # @targets.setter
+    # def targets(self, value):
+    #     if not isinstance(value, (pd.Series, pd.DataFrame)):
+    #         raise TypeError('Targets must be pd.Series or pd.DataFrame!')
+    #     self._targets = value
 
     @property
     def ols_features(self):
         return self._ols_features
 
-    @ols_features.setter
-    def ols_features(self, value):
-        if not isinstance(value, (pd.Series, pd.DataFrame)):
-            raise TypeError('ols_features must be pd.Series or pd.DataFrame')
-        self._ols_features = value
+    # @ols_features.setter
+    # def ols_features(self, value):
+    #     if not isinstance(value, (pd.Series, pd.DataFrame)):
+    #         raise TypeError('ols_features must be pd.Series or pd.DataFrame')
+    #     self._ols_features = value
 
     # ------------------------ Methods ----------------------------- #
     def __init__(self,
                  processed_dir: str = None,
-                 features_type: OLSFeatures = None):
+                 ols_features=None,
+                 targets=None,
+                 forward_window=None):
         """
         一个用于分组回归的对象。
+        支持的两种调用方式：
+        兼容保存过的数据：
+            GroupedOLS(processed_dir, ols_features:OLSFeatures)
+        使用自定义数据：
+            GroupedOLS(ols_features:df or Series, targets, forward_window)
+        其他方式可能会出现未知的Bug
+
         Parameters:
         -----------
         processed_dir:
             str
             存储process data 的路径
-        features_type:
-            OLSFeatures
+        ols_features:
+            OLSFeatures, pd.DataFrame or pd.Series
             用于指定分组OLS 的features 类
-        
+        targets:
+            pd.DataFrame or pd.Series
+            用于手动指定targets
+        forward_window:
+            int
+            持有期的长度
+
         Return:
         -------
         A instace of GroupedOLS.
         """
-        self._processed_dir = processed_dir
-        self._targets = self._get_proc_data(ProcessedType.targets)
-        self._ols_features = self.select_features(features_type)
+        # 判定参数processed_dir 和forward_window
+        if processed_dir is not None and forward_window is None:
+            # 如果指定了processed_dir，则赋值给属性
+            if not isinstance(processed_dir, str):
+                raise TypeError('processed_dir must be str!')
+            self._processed_dir = processed_dir
+            self.forward_window
+        elif forward_window is not None:
+            # 一旦制定了forward_window，那么直接给_forward_window 属性赋值
+            try:
+                self._forward_window = forward_window
+            except TypeError as error:
+                raise error
+
+        # 判定ols_features 参数
+        if isinstance(ols_features, OLSFeatures):
+            # 如果是OLSFeatures，则使用select_features 方法
+            self._ols_features = self.select_features(ols_features)
+        else:
+            # 如果不是，判定类型然后赋值
+            if not isinstance(ols_features, (pd.Series, pd.DataFrame)):
+                raise TypeError(
+                    'ols_features must be pd.Series or pd.DataFrame!')
+            self._ols_features = ols_features
+
+        # 当targets 为空，去数据路径中获取targets。
+        if targets is None:
+            try:
+                self._targets = self._get_proc_data(ProcessedType.targets)
+            except AttributeError as er:
+                raise er
+        else:
+            if not isinstance(targets, (pd.DataFrame, pd.Series)):
+                raise TypeError('targets must be pd.DataFrame or pd.Series!')
+            self._targets = targets
 
     def _get_proc_data(self, pro_data_type):
         return proda.get_processed(from_dir=self._processed_dir,
@@ -183,7 +232,7 @@ class GroupedOLS(object):
             statsmodels 下的OLSResults，即OLS 拟合后的结果类
         """
         fit = model.fit(cov_type='HAC',
-                        cov_kwds={'maxlags': self.forward_window})
+                        cov_kwds={'maxlags': self._forward_window})
         return fit
 
     # 用于将target 与features 组合后进行分组设定回归模型的函数

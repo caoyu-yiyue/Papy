@@ -134,7 +134,7 @@ class Test_objective(object):
     @pytest.fixture
     def grouped_ols_obj(self):
         obj = GroupedOLS(processed_dir='data/processed/',
-                         features_type=olm.OLSFeatures.market_ret)
+                         ols_features=olm.OLSFeatures.market_ret)
         return obj
 
     def test_get_attr(self, grouped_ols_obj):
@@ -150,14 +150,6 @@ class Test_objective(object):
             proda.get_processed(
                 'data/processed/',
                 which=proda.ProcessedType.market_ret).dropna()).all().all()
-
-    def test_set_attr(self, grouped_ols_obj):
-        obj: GroupedOLS = grouped_ols_obj
-        obj.targets = proda.get_processed('data/processed/',
-                                          which=proda.ProcessedType.targets)
-        obj.ols_features = proda.get_processed(
-            'data/processed/', which=proda.ProcessedType.turnover)
-        obj.forward_window = 4
 
     def test_ols_in_group(self, grouped_ols_obj):
         obj: GroupedOLS = grouped_ols_obj
@@ -180,3 +172,11 @@ class Test_objective(object):
                                                     detail='param',
                                                     column='const')
         detail_df_from_fun.eq(detail_df_from_obj).all().all()
+
+    def test_pass_in_target_manually(self):
+        tar = proda.get_processed('data/processed/',
+                                  proda.ProcessedType.targets)
+        fea = proda.get_processed('data/processed/',
+                                  proda.ProcessedType.market_ret)
+        obj = GroupedOLS(ols_features=fea, targets=tar, forward_window=5)
+        obj.ols_in_group()
