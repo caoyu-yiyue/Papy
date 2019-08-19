@@ -280,7 +280,7 @@ class ProcessedType(Enum):
     three_fac = '3_fac_features'
 
 
-def get_processed(from_dir: str, which: ProcessedType):
+def get_processed(which: ProcessedType, from_dir: str = 'data/processed/'):
     """
     读取某一种保存过的processed data
 
@@ -296,6 +296,10 @@ def get_processed(from_dir: str, which: ProcessedType):
     Returns:
         pd.DataFrame or pd.Series，与保存时相同
     """
+    # 如果from_dir 结尾没有'/'，则追加一个
+    if from_dir[-1] != '/':
+        from_dir = from_dir + '/'
+
     # 拼接出整个的文件路径，然后将保存的数据框读取出来。
     feature_path = from_dir + which.value + '.pickle'
     feature_frame = pd.read_pickle(feature_path)

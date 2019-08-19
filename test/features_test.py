@@ -13,6 +13,7 @@ def test_no_error_get_processed():
     """
     for ftype in list(proda.ProcessedType):
         proda.get_processed(from_dir='data/processed/', which=ftype)
+        proda.get_processed(which=ftype, from_dir='data/processed')
 
 
 class Test_std_features(object):
