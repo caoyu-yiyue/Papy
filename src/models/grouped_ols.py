@@ -324,7 +324,7 @@ class GroupedOLS(object):
 
         return self
 
-    def __star_df(pvalue):
+    def __star_df(self, pvalue):
         """
         float -> str
         输入一个p 值，返回对应的星号。用于apply 中调用。
