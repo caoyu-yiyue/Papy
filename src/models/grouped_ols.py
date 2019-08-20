@@ -341,6 +341,7 @@ class GroupedOLS(object):
     def look_up_ols_detail(self, detail, column=None, t_test_str=None):
         """
         返回一个OLSRsults 对象组成的DataFrame 的系数、pvalue、tvalue 等细节
+        如果调用它之前没有调用过ols_in_group()，则会使用默认参数调用该方法
 
         Parameters:
         -----------
@@ -362,6 +363,10 @@ class GroupedOLS(object):
             pd.DataFrame
             存储所需的OLS 回归结果细节的数据框
         """
+
+        # 如果_ols_dframe 为空，则使用默认参数调用ols_in_group() method
+        if self._ols_dframe is None:
+            self.ols_in_group()
 
         # 取ols_dframe 属性为ols_result_df
         ols_result_df = self._ols_dframe
