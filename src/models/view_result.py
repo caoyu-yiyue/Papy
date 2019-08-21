@@ -38,10 +38,10 @@ def t_test_single_col(for_which, col):
         elif isinstance(col, int):
             fea_name = obj.look_up_ols_detail(detail='params_name')
             msg_col = fea_name[col]
-        display(HTML("<p>param for '{}'</p>".format(msg_col)))
+        display(key + ': ' + "param for '{}'".format(msg_col))
         display(obj.look_up_ols_detail(detail='param', column=col))
 
-        display(HTML("<p>t value for '{}'</p>".format(msg_col)))
+        display(key + ': ' + "t_value for '{}'".format(msg_col))
         display(obj.look_up_ols_detail(detail='t_test_star', column=col))
 
 
@@ -53,7 +53,7 @@ def t_test_multi_col(for_which, cols):
         fea_name: list = delta_std_obj.look_up_ols_detail(detail='params_name')
         cols_slc = slice(cols[0], cols[1])
         test_str = ' + '.join(fea_name[cols_slc]) + ' = 0'
-        display(HTML("<p>test for '{}'.".format(test_str)))
+        display(key + ': ' + test_str)
         display(
             delta_std_obj.look_up_ols_detail(detail='t_test_star',
                                              t_test_str=test_str))
