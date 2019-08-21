@@ -25,21 +25,21 @@ clean_features:
 clean_models:
 	rm -f models/*.pickle
 
+clean_robost:
+	rm -f data/robost/*/*.pickle
+
 # clean all files but no raw data file
 clean:
 	rm -f data/interim/*.pickle
 	rm -f data/processed/*.pickle
 	rm -f data/external/*.pickle
+	rm -f data/robost/*/*.pickle
 	rm -f models/*.pickle
 
 
 # clean all generated file
-clean_all:
+clean_all: clean
 	rm -f data/raw/*.h5
-	rm -f data/interim/*.pickle
-	rm -f data/processed/*.pickle
-	rm -f data/external/*.pickle
-	rm -f models/*.pickle
 
 # read raw csv to hdfs
 data/raw/raw_data.h5:
@@ -129,6 +129,6 @@ $(rob_features): $(rob_dir)/targets.pickle | $(rob_dir)
 
 rob_test: $(rob_dir) $(rob_dir)/targets.pickle $(rob_features)
 
-robost:
+robost: data/interim/prepared_data.pickle
 	$(MAKE) rob_test backward=40 forward=5 &
 	$(MAKE) rob_test backward=20 forward=5 &
