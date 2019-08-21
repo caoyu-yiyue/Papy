@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 from src.data import preparing_data as predata
 from src.features import reverse_port_ret as rpt
-from enum import Enum
+from aenum import Enum, NoAlias
 
 
 def obtain_feature_index(reverse_ret_dframe: pd.DataFrame):
@@ -269,6 +269,8 @@ class ProcessedType(Enum):
     """
     每一种单个processed data 类型的Enum
     """
+    _settings_ = NoAlias
+
     targets = 'targets'
     market_ret = 'rm_features'
     rolling_std_log = 'std_features'
