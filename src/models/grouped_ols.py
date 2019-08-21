@@ -374,10 +374,11 @@ class GroupedOLS(object):
 
         # 检查detail 在需要的范围内
         if detail not in {
-                'param', 'pvalue', 'pvalue_star', 't_test', 't_test_star'
+                'param', 'params_name', 'pvalue', 'pvalue_star', 't_test',
+                't_test_star'
         }:
             raise ValueError(
-                "detail must be on of 'param', 'pvalue', 'pvalue_star',\
+                "detail must be one of 'param','params_name', 'pvalue', 'pvalue_star',\
                 't_test', 't_test_star'")
 
         # 检查detail 为t 检验时，对t_test_str 和column 值进行验证
@@ -396,10 +397,13 @@ class GroupedOLS(object):
         if isinstance(ols_result_df, pd.Series):
             ols_result_df: pd.DataFrame = ols_result_df.unstack()
 
-        if detail == 'param':
+        # 返回回归系数的名称
+        if detail == 'params_name':
+            return ols_result_df.iloc[0, 0].params.index.tolist()
+        # 返回系数
+        elif detail == 'param':
             result_df = ols_result_df.applymap(
                 lambda ols_result: ols_result.params[column].round(4))
-
         # pvalues
         elif detail == 'pvalue':
             # 返回系数p 值本值
