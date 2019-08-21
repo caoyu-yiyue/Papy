@@ -291,7 +291,7 @@ class GroupedOLS(object):
         for i, feature_df in enumerate(combine_df_list[1:]):
             # 如果传入的merge_on 为空值，那么将其设定为features 的index 的name
             if merge_on is None or merge_on[i] is None:
-                print('Did not specify on which to merge Y and X, \
+                Warning('Did not specify on which to merge Y and X, \
                     using X\'s index instead.')
                 perhap_index_name = [
                     feature_df.index.name, feature_df.index.names
