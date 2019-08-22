@@ -3,8 +3,10 @@ import pandas as pd
 from src.features import process_data_api as proda
 from src.features.process_data_api import ProcessedType
 from src.models import ols_model as olm
+from src.models.ols_model import OLSFeatures
 from src.models.grouped_ols import GroupedOLS
 from statsmodels.regression.linear_model import RegressionResultsWrapper
+import re
 
 
 class Test_ols_process(object):
@@ -183,3 +185,77 @@ class Test_objective(object):
         )
         obj = GroupedOLS(ols_features=fea, targets=tar, forward_window=5)
         obj.ols_in_group()
+
+
+class Test_obj_look_detail(object):
+    @pytest.fixture
+    def gols_obj(self):
+        """创建一个GroupedOLS 对象"""
+        obj: GroupedOLS = GroupedOLS(processed_dir='data/processed/',
+                                     ols_features=OLSFeatures.std_with_sign)
+        return obj.ols_in_group()
+
+    @pytest.fixture
+    def first_result(self, gols_obj):
+        """获取第一个OLS result"""
+        return gols_obj.ols_dframe.iloc[0, 0]
+
+    def test_each_detail(self, gols_obj):
+        """测试每一个details 传入后没有问题"""
+        details = [
+            'param', 'params_name', 'pvalue', 'pvalue_star', 't_test',
+            't_test_star'
+        ]
+        for detail in details:
+            gols_obj.look_up_ols_detail(detail=detail,
+                                        column=0,
+                                        t_test_str='const = 0')
+
+    def test_param_details(self, gols_obj, first_result):
+        """测试params 相关功能"""
+        # params_name
+        assert gols_obj.look_up_ols_detail(
+            detail='params_name') == first_result.params.index.tolist()
+
+        # param
+        assert gols_obj.look_up_ols_detail(
+            detail='param',
+            column=1).iloc[0, 0] == first_result.params[1].round(4)
+
+    def test_pvalue_detail(self, gols_obj, first_result):
+        """测试pvalue 相关功能"""
+        # pvalue
+        gols_obj.look_up_ols_detail(
+            'pvalue', column=1).iloc[0, 0] == first_result.pvalues[0]
+
+        # pvalue with star
+        with_star = gols_obj.look_up_ols_detail('pvalue_star',
+                                                column=2).iloc[0, 0]
+        float(re.sub(r'\**', '', with_star)) == first_result.pvalues.round(4)
+
+    def test_t_test_detail(self, gols_obj, first_result):
+        """测试t test 相关功能"""
+        # 指定列
+        detail_df = gols_obj.look_up_ols_detail(detail='t_test', column=1)
+        assert detail_df.iloc[0, 0] == first_result.tvalues[1].round(4)
+
+        # 指定t_test_str
+        detail_df = gols_obj.look_up_ols_detail(
+            detail='t_test', t_test_str='const + rolling_std_log = 0')
+        assert detail_df.iloc[0, 0] == first_result.t_test(
+            'const + rolling_std_log = 0').tvalue.item()
+
+        # 同时指定二者，返回warning，并按照t_test_str 进行测试
+        with pytest.warns(UserWarning):
+            detail_df = gols_obj.look_up_ols_detail(
+                detail='t_test',
+                column=1,
+                t_test_str='const + rolling_std_log = 0')
+
+            assert detail_df.iloc[0, 0] == first_result.t_test(
+                'const + rolling_std_log = 0').tvalue.item()
+
+        # 测试t_test_star 功能无错
+        with_star = gols_obj.look_up_ols_detail('t_test_star',
+                                                column=2).iloc[0, 0]
+        float(re.sub(r'\**', '', with_star)) == first_result.tvalues.round(4)
