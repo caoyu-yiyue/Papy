@@ -317,10 +317,10 @@ class GroupedOLS(object):
         ols_trained: pd.Series = ols_setted.apply(self.__each_ols_train)
 
         # reindex the Series for the ols results
-        ols_series_reindexed = ols_trained.reindex(
-            index=['Small', '2', '3', '4', 'Big'], level=0)
+        ols_frame_reindexed = ols_trained.reindex(
+            index=['Small', '2', '3', '4', 'Big'], level=0).unstack()
 
-        self._ols_dframe = ols_series_reindexed
+        self._ols_dframe = ols_frame_reindexed
 
         return self
 
@@ -345,18 +345,16 @@ class GroupedOLS(object):
 
         Parameters:
         -----------
-        ols_result_df:
-            pd.DataFrame or pd.Series
-            存储OLSRsults 对象的DataFrame
         detail:
             str
             需要的结果细节的类型
-            可选范围是{'param', 'pvalue', 'pvalue_star', 't_test', 't_test_star'}
+            可选范围是{'param', 'params_name', pvalue', 'pvalue_star', 't_test',
+            't_test_star'}
         column:
             str or int
             需要返回的结果所在的列名，或它在回归结果中的index 数
         t_test_str:
-            若需要返回的是t 检验相关的结果，则需要指定检验公式，以str 提供如'const = 0'
+            若需要返回的是t 检验相关的结果，可以指定检验公式，以str 提供如'const = 0'
             在同时提供该参数与column 时，使用t_test_str 进行检验，column 值无效。
 
         Returns:
@@ -392,10 +390,6 @@ class GroupedOLS(object):
                 # 如果二者都不是None，下面使用t_test_str 进行检验，同时抛出Warning
                 Warning("Both column and t_test_str are provided,"
                         "just using t_test_str for testing.")
-
-        # 如果传入的结果类型是Series，则要将其变为DataFrame
-        if isinstance(ols_result_df, pd.Series):
-            ols_result_df: pd.DataFrame = ols_result_df.unstack()
 
         # 返回回归系数的名称
         if detail == 'params_name':
