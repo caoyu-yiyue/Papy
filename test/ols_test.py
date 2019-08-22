@@ -259,3 +259,7 @@ class Test_obj_look_detail(object):
         with_star = gols_obj.look_up_ols_detail('t_test_star',
                                                 column=2).iloc[0, 0]
         float(re.sub(r'\**', '', with_star)) == first_result.tvalues.round(4)
+
+    def test_both_column_and_testStr(self, gols_obj):
+        with pytest.raises(ValueError):
+            gols_obj.look_up_ols_detail('pvalue')

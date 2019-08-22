@@ -368,9 +368,6 @@ class GroupedOLS(object):
         if self._ols_dframe is None:
             self.ols_in_group()
 
-        # 取ols_dframe 属性为ols_result_df
-        ols_result_df = self._ols_dframe
-
         # 检查detail 在需要的范围内
         if detail not in {
                 'param', 'params_name', 'pvalue', 'pvalue_star', 't_test',
@@ -380,68 +377,73 @@ class GroupedOLS(object):
                 "detail must be one of 'param','params_name', 'pvalue', 'pvalue_star',\
                 't_test', 't_test_star'")
 
-        # 检查detail 为t 检验时，对t_test_str 和column 值进行验证
-        if detail.startswith('t_test'):
-            if t_test_str is None and column is None:
-                # 如果t_test_str 和column 都是None，返回错误
-                msg = ("Must provide t_test_str when ask for t test"
-                       "but did't provide a column")
-                raise ValueError(msg)
-            elif t_test_str is not None and column is not None:
-                # 如果二者都不是None，下面使用t_test_str 进行检验，同时抛出Warning
-                warnings.warn("Both column and t_test_str are provided,"
-                              "just using t_test_str for testing.")
+        # 检查detail 为t 检验时，column 和t_test_str 都不是None，
+        # 下面使用t_test_str 进行检验，同时抛出Warning
+        if detail.startswith(
+                't_test') and t_test_str is not None and column is not None:
+            warnings.warn("Both column and t_test_str are provided,"
+                          "just using t_test_str for testing.")
 
+        # ---------------------------- main part ---------------------------- #
         # 返回回归系数的名称
         if detail == 'params_name':
-            return ols_result_df.iloc[0, 0].params.index.tolist()
+            return self._ols_dframe.iloc[0, 0].params.index.tolist()
         # 返回系数
         elif detail == 'param':
-            result_df = ols_result_df.applymap(
+            result_df = self._ols_dframe.applymap(
                 lambda ols_result: ols_result.params[column].round(4))
+
+        # 判定是否需要计算p_value df
+        if detail.startswith('pvalue') or detail.endswith('star'):
+            # 如果计算pvalue 或是需要计算star，那么计算pvalue_df
+            try:
+                # 首先尝试用t_test_str 获取t 检验后的t 值
+                pvalue_df = self._ols_dframe.applymap(
+                    lambda ols_result: ols_result.t_test(t_test_str
+                                                         ).pvalue.item())
+            except ValueError:
+                try:
+                    # 尝试使用column 找到t 值
+                    pvalue_df = self._ols_dframe.applymap(
+                        lambda ols_result: ols_result.pvalues[column].round(4))
+                except KeyError:
+                    raise ValueError("Must provide a int for column or a str"
+                                     "for t_test_str if is a t test.")
+
+        # 判定是否需要计算tvalue df
+        if detail.startswith('t_test'):
+            # 如果是t 检验相关
+            try:
+                # 先尝试使用t_test_str 进行t 检验并返回t 值
+                tvalue_df = self._ols_dframe.applymap(
+                    lambda ols_result: ols_result.t_test(t_test_str
+                                                         ).tvalue.item())
+            except ValueError:
+                try:
+                    # 再尝试使用column 找到t 值
+                    tvalue_df = self._ols_dframe.applymap(
+                        lambda ols_result: ols_result.tvalues[column].round(4))
+                except KeyError:
+                    raise ValueError("Must provide a column or a t_test_str "
+                                     "for t test.")
+
         # pvalues
-        elif detail == 'pvalue':
+        if detail == 'pvalue':
             # 返回系数p 值本值
-            result_df = ols_result_df.applymap(
-                lambda ols_result: ols_result.pvalues[column].round(4))
+            result_df = pvalue_df
         elif detail == 'pvalue_star':
             # 返回带星号的系数p 值
-            pvalue_df: pd.DataFrame = self.look_up_ols_detail('pvalue',
-                                                              column=column)
             star_df: pd.DataFrame = pvalue_df.applymap(self.__star_df)
-            df_add_star: pd.DataFrame = pvalue_df.applymap(
+            result_df: pd.DataFrame = pvalue_df.applymap(
                 lambda pvalue: format(pvalue, '.4f')) + star_df
-            result_df = df_add_star
 
         # t_test
         elif detail == 't_test':
             # 返回t 检验的t 值本值
-            if t_test_str is None:
-                # 如果t_test_str 是空，则返回column 列指定的t 值
-                result_df = ols_result_df.applymap(
-                    lambda ols_result: ols_result.tvalues[column].round(4))
-            else:
-                # 一旦指定了t_test_str，则使用t_test_str 进行检验
-                result_df = ols_result_df.applymap(
-                    lambda ols_result: ols_result.t_test(t_test_str
-                                                         ).tvalue.item())
+            result_df = tvalue_df
         elif detail == 't_test_star':
             # 返回带星号的t 值
-
-            # 首先根据p 值判定出一个star_df
-            if t_test_str is None:
-                # 如果t_test_str 为空，则根据column 找到pvalue
-                pvalue_df = self.look_up_ols_detail(detail='pvalue',
-                                                    column=column)
-            else:
-                # 否则，使用t_test_str 完成t 检验并返回p 值
-                pvalue_df = ols_result_df.applymap(
-                    lambda ols_result: ols_result.t_test(t_test_str
-                                                         ).pvalue.item())
             star_df: pd.DataFrame = pvalue_df.applymap(self.__star_df)
-
-            tvalue_df: pd.DataFrame = self.look_up_ols_detail(
-                detail='t_test', column=column, t_test_str=t_test_str)
             result_df = tvalue_df.applymap(
                 lambda pvalue: format(pvalue, '.4f')) + star_df
 
