@@ -1,6 +1,7 @@
 import pytest
 import pandas as pd
 from src.features import process_data_api as proda
+from src.features.process_data_api import ProcessedType
 from src.models import ols_model as olm
 from src.models.grouped_ols import GroupedOLS
 from statsmodels.regression.linear_model import RegressionResultsWrapper
@@ -144,12 +145,12 @@ class Test_objective(object):
         obj: GroupedOLS = grouped_ols_obj
         assert obj.forward_window == 5
         assert obj.targets.eq(
-            proda.get_processed('data/processed/',
-                                which=proda.ProcessedType.targets)).all()
+            proda.get_processed(which=ProcessedType.targets,
+                                from_dir='data/processed')).all()
         assert obj.ols_features.dropna().eq(
             proda.get_processed(
-                'data/processed/',
-                which=proda.ProcessedType.market_ret).dropna()).all().all()
+                which=ProcessedType.market_ret,
+                from_dir='data/processed/').dropna()).all().all()
 
     def test_ols_in_group(self, grouped_ols_obj):
         obj: GroupedOLS = grouped_ols_obj
@@ -163,10 +164,10 @@ class Test_objective(object):
         detail_df_from_obj = obj.ols_in_group().look_up_ols_detail(
             'param', 'const')
 
-        targets = proda.get_processed('data/processed/',
-                                      proda.ProcessedType.targets)
-        mkt_ret = proda.get_processed('data/processed/',
-                                      proda.ProcessedType.market_ret)
+        targets = proda.get_processed(which=ProcessedType.targets,
+                                      from_dir='data/processed/')
+        mkt_ret = proda.get_processed(which=ProcessedType.market_ret,
+                                      from_dir='data/processed/')
         ols_series = olm.ols_in_group(targets, mkt_ret)
         detail_df_from_fun = olm.look_up_ols_detail(ols_result_df=ols_series,
                                                     detail='param',
@@ -174,9 +175,11 @@ class Test_objective(object):
         detail_df_from_fun.eq(detail_df_from_obj).all().all()
 
     def test_pass_in_target_manually(self):
-        tar = proda.get_processed('data/processed/',
-                                  proda.ProcessedType.targets)
-        fea = proda.get_processed('data/processed/',
-                                  proda.ProcessedType.market_ret)
+        tar = proda.get_processed(which=ProcessedType.targets,
+                                  from_dir='data/processed/')
+        fea = proda.get_processed(
+            which=ProcessedType.market_ret,
+            from_dir='data/processed/',
+        )
         obj = GroupedOLS(ols_features=fea, targets=tar, forward_window=5)
         obj.ols_in_group()
