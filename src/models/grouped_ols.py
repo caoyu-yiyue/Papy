@@ -5,6 +5,7 @@ from src.features.process_data_api import ProcessedType
 from src.models.ols_model import OLSFeatures
 from statsmodels import api as sm
 import re
+import warnings
 
 
 class GroupedOLS(object):
@@ -291,7 +292,7 @@ class GroupedOLS(object):
         for i, feature_df in enumerate(combine_df_list[1:]):
             # 如果传入的merge_on 为空值，那么将其设定为features 的index 的name
             if merge_on is None or merge_on[i] is None:
-                Warning('Did not specify on which to merge Y and X, \
+                warnings.warn('Did not specify on which to merge Y and X, \
                     using X\'s index instead.')
                 perhap_index_name = [
                     feature_df.index.name, feature_df.index.names
@@ -386,10 +387,10 @@ class GroupedOLS(object):
                 msg = ("Must provide t_test_str when ask for t test"
                        "but did't provide a column")
                 raise ValueError(msg)
-            elif t_test_str and column:
+            elif t_test_str is not None and column is not None:
                 # 如果二者都不是None，下面使用t_test_str 进行检验，同时抛出Warning
-                Warning("Both column and t_test_str are provided,"
-                        "just using t_test_str for testing.")
+                warnings.warn("Both column and t_test_str are provided,"
+                              "just using t_test_str for testing.")
 
         # 返回回归系数的名称
         if detail == 'params_name':
