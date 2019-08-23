@@ -44,8 +44,8 @@ def backward_rolling_apply(df: pd.DataFrame,
         每组的前(window - 1) 个位置为NaN。
     """
 
-    print('Calculating the past window using ' + method.__name__ +
-          ' column \'{}\'...'.format(calcu_column))
+    print('Calculating the past window {} using '.format(window) +
+          method.__name__ + ' column \'{}\'...'.format(calcu_column))
 
     applied_series: pd.Series = df.loc[:, calcu_column].groupby(
         level=groupby_column,
@@ -98,8 +98,8 @@ def forward_rolling_apply(df: pd.DataFrame,
         滚动按未来Window 使用method 计算得到的一列Series 结果。
     """
 
-    print('Calculating the forward window using method ' + method.__name__ +
-          ' for column \'{}\'...'.format(calcu_column))
+    print('Calculating the forward window {} using method '.format(window) +
+          method.__name__ + ' for column \'{}\'...'.format(calcu_column))
 
     # 由于pandas v0.24.1 还没有向前滚动的接口，这里先将数据倒置过来，然后向后apply 函数，达到目的。
     reverse_order: pd.Series = df[::-1].loc[:, calcu_column]
