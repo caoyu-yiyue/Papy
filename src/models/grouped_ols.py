@@ -379,8 +379,7 @@ class GroupedOLS(object):
 
         # 检查detail 为t 检验时，column 和t_test_str 都不是None，
         # 下面使用t_test_str 进行检验，同时抛出Warning
-        if detail.startswith(
-                't_test') and t_test_str is not None and column is not None:
+        if detail.startswith('t_test') and None not in (column, t_test_str):
             warnings.warn("Both column and t_test_str are provided,"
                           "just using t_test_str for testing.")
 
