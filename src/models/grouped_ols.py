@@ -105,7 +105,8 @@ class GroupedOLS(object):
             self._ols_features = self.select_features(ols_features)
         else:
             # 如果不是，判定类型然后赋值
-            if not isinstance(ols_features, (pd.Series, pd.DataFrame)):
+            if not isinstance(ols_features,
+                              (pd.Series, pd.DataFrame, list, tuple)):
                 raise TypeError(
                     'ols_features must be pd.Series or pd.DataFrame!')
             self._ols_features = ols_features
