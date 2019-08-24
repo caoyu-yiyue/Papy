@@ -10,30 +10,31 @@ import warnings
 
 class OLSFeatures(Enum):
     """
-    用于枚举回归feature 类型的Enum
+    用于枚举回归feature 类型的Enum，value 的格式为main/dummy/control。
+    main 将与每个dummy 相乘，control 则不会。若dummy 缺省，需要留下两个// 为标记。
     """
     # 原论文中的部分
-    market_ret = 'mkt'
-    rolling_std_log = 'std'
+    market_ret = 'market_ret'
+    rolling_std_log = 'rolling_std_log'
     delta_std = 'delta_std'
-    delta_std_and_rm = 'delta_std_rm'
+    delta_std_and_rm = 'delta_std//market_ret'
 
     # 新增加的部分
     delta_std_full = 'delta_std_full'
-    delta_std_full_rm = 'delta_std_full_rm'
+    delta_std_full_rm = 'delta_std_full//market_ret'
     amihud = 'amihud'
     turnover = 'turnover'
 
     # 加上sign 的部分
-    std_with_sign = 'std_with_sign'
-    delta_std_full_sign = 'delta_std_full_sign'
-    delta_std_full_sign_rm = 'delta_std_full_sign_rm'
+    std_with_sign = 'rolling_std_log/ret_sign'
+    delta_std_full_sign = 'delta_std_full/ret_sign'
+    delta_std_full_sign_rm = 'delta_std_full/ret_sign/market_ret'
 
     # 同时有vol 和liquid 的部分
-    std_amihud = 'std_amihud'
-    delta_std_full_amihud = 'delta_std_full_amihud'
-    std_amihud_sign = 'std_amihud_sign'
-    delta_std_full_amihud_sign = 'delta_std_full_amihud_sign'
+    std_amihud = 'rolling_std_log&amihud'
+    delta_std_full_amihud = 'delta_std_full&amihud'
+    std_amihud_sign = 'rolling_std_log&amihud/ret_sign'
+    delta_std_full_amihud_sign = 'delta_std_full&amihud/ret_sign'
 
 
 class GroupedOLS(object):
@@ -130,7 +131,7 @@ class GroupedOLS(object):
         # 判定ols_features 参数
         if isinstance(ols_features, OLSFeatures):
             # 如果是OLSFeatures，则使用select_features 方法
-            self._ols_features = self.select_features(ols_features)
+            self.select_features(ols_features)
         else:
             # 如果不是，判定类型然后赋值
             if not isinstance(ols_features,
@@ -156,7 +157,7 @@ class GroupedOLS(object):
 
     def select_features(self, features_type: OLSFeatures):
         """
-        输入一种features 类型，返回相应类型的features
+        输入一种features 类型，指定属性_ols_features(为一个list)
         Parameters:
         -----------
         features_type:
@@ -165,91 +166,62 @@ class GroupedOLS(object):
 
         Results:
         --------
-        pd.Series, pd.DataFrame or tuple of them.
-            返回的features，如果是多个则返回为一个tuple
+        将_ols_features 指定为features_type 对应的类型
         """
 
-        if features_type == OLSFeatures.market_ret:
-            features = self._get_proc_data(ProcessedType.market_ret)
-        elif features_type == OLSFeatures.rolling_std_log:
-            features = self._get_proc_data(ProcessedType.rolling_std_log)
-        elif features_type == OLSFeatures.delta_std:
-            features = self._get_proc_data(ProcessedType.delta_std)
-        elif features_type == OLSFeatures.delta_std_and_rm:
-            # 指定该类型时，使用未来的市场收益率数据、合并上未来的波动率变动数据，一起返回
-            rm_features: pd.DataFrame = self._get_proc_data(
-                ProcessedType.market_ret)
-            delta_std = self._get_proc_data(ProcessedType.delta_std)
-            features = rm_features.merge(delta_std, on='Trddt')
+        feas_str: str = features_type.value
+        # 如果feas_str 中'/' 不足两个，则为其增加数量，使其有两个
+        if feas_str.count('/') < 2:
+            feas_str += '/' * (2 - feas_str.count('/'))
 
-        elif features_type == OLSFeatures.delta_std_full:
-            # 返回整个未来区间内的std 变动量
-            features = self._get_proc_data(ProcessedType.delta_std_full)
-        elif features_type == OLSFeatures.delta_std_full_rm:
-            rm_features = self._get_proc_data(ProcessedType.market_ret)
-            delta_full = self._get_proc_data(ProcessedType.delta_std_full)
-            features = (delta_full, rm_features)
-        elif features_type == OLSFeatures.amihud:
-            # 返回amihud 值
-            features = self._get_proc_data(ProcessedType.amihud)
-        elif features_type == OLSFeatures.turnover:
-            # 返回turnover 值
-            features = self._get_proc_data(ProcessedType.turnover)
+        # 分离出每个属性，大类分为main dummy 和control，每个里面为具体的ProcessedType.name
+        try:
+            main_list = feas_str.split('/')[0].split('&')
+            dummy_list = feas_str.split('/')[1].split('&')
+            control_list = feas_str.split('/')[2].split('&')
+        except Exception:
+            pass
 
-        elif features_type == OLSFeatures.std_with_sign:
-            # 返回波动率(std)、组合收益率虚拟变量、及二者交互项
-            std_features = self._get_proc_data(ProcessedType.rolling_std_log)
-            ret_sign = self._get_proc_data(ProcessedType.ret_sign)
-            std_with_sign = proda.features_mul_dummy(std_features, ret_sign)
-            features = (ret_sign, std_features, std_with_sign)
-        elif features_type == OLSFeatures.delta_std_full_sign:
-            # 返回整个区间中波动率(std)变动、组合收益率虚拟变量、及二者交互
-            delta_std_full: pd.Series = self._get_proc_data(
-                ProcessedType.delta_std_full)
-            ret_sign: pd.Series = self._get_proc_data(ProcessedType.ret_sign)
-            delta_full_with_sign: pd.Series = proda.features_mul_dummy(
-                delta_std_full, ret_sign)
-            features = (ret_sign, delta_std_full, delta_full_with_sign)
-        elif features_type == OLSFeatures.delta_std_full_sign_rm:
-            # 返回整个区间中波动率（std）变动、组合收益率正负虚拟变量、二者交互、市场过去五天收益做控制
-            ret_sign = self._get_proc_data(ProcessedType.ret_sign)
-            delta_std_full = self._get_proc_data(ProcessedType.delta_std_full)
-            delta_full_with_sign = proda.features_mul_dummy(
-                delta_std_full, ret_sign)
-            mkt_5day = self._get_proc_data(ProcessedType.market_ret)
-            features = (ret_sign, delta_std_full, delta_full_with_sign,
-                        mkt_5day)
+        # 三种features 分别按照str 取出来，
+        # list_three_type 中0, 1, 2 位置分别存储main, dummy 和control 三个list
+        list_three_type = []
+        for fea_str_list in [main_list, dummy_list, control_list]:
+            # 对每个存有ProcessedType name 的list 循环，按照其中的每个name 读取相应features
+            feas_a_type = list(
+                map(
+                    lambda x: None
+                    if x == '' else proda.get_processed(ProcessedType[x]),
+                    fea_str_list))
+            list_three_type.append(feas_a_type)
 
-        elif features_type == OLSFeatures.std_amihud:
-            std_features = self._get_proc_data(ProcessedType.rolling_std_log)
-            amihud = self._get_proc_data(ProcessedType.amihud)
-            features = (std_features, amihud)
-        elif features_type == OLSFeatures.delta_std_full_amihud:
-            delta_std_full = self._get_proc_data(ProcessedType.delta_std_full)
-            amihud = self._get_proc_data(ProcessedType.amihud)
-            features = (delta_std_full, amihud)
-        elif features_type == OLSFeatures.std_amihud_sign:
-            ret_sign = self._get_proc_data(ProcessedType.ret_sign)
-            std_features = self._get_proc_data(ProcessedType.rolling_std_log)
-            amihud = self._get_proc_data(ProcessedType.amihud)
-            std_with_sign = proda.features_mul_dummy(std_features, ret_sign)
-            amihud_with_sign = proda.features_mul_dummy(amihud, ret_sign)
-            features = (ret_sign, std_features, std_with_sign, amihud,
-                        amihud_with_sign)
-        elif features_type == OLSFeatures.delta_std_full_amihud_sign:
-            delta_std_full = self._get_proc_data(ProcessedType.delta_std_full)
-            amihud = self._get_proc_data(ProcessedType.amihud)
-            ret_sign = self._get_proc_data(ProcessedType.ret_sign)
-            delta_std_full_with_sign = proda.features_mul_dummy(
-                delta_std_full, ret_sign)
-            amihud_with_sign = proda.features_mul_dummy(amihud, ret_sign)
-            features = (ret_sign, delta_std_full, delta_std_full_with_sign,
-                        amihud, amihud_with_sign)
+        if list_three_type[1][0] is not None:
+            # 对于dummy list，如果不是None（这里以第一个项目为标准即可），则与main 相乘
+            main_mul_dummy_list = [
+                proda.features_mul_dummy(features=fea, dummy=dum)
+                for fea in list_three_type[0] for dum in list_three_type[1]
+            ]
 
+            # 按照features 的name 排序，使输出顺序尽量可控。
+            # 但只能保证main 和dummy 都是Sereis 的时候有效
+            try:
+                main_and_mutiplied = sorted(
+                    (list_three_type[0] + main_mul_dummy_list),
+                    key=lambda x: x.name)
+
+                features = list_three_type[
+                    1] + main_and_mutiplied + list_three_type[2]
+            except AttributeError:
+                # 如果main 或main_mul_dummy 中有DataFrame，
+                # 则不执行按name 排序，直接返回如下的顺序
+                features = list_three_type[1] + list_three_type[
+                    0] + main_mul_dummy_list + list_three_type[2]
         else:
-            raise ValueError('Unknown features type passed.')
+            # 没有dummy 时，直接组合main 和control
+            features = list_three_type[0] + list_three_type[2]
 
-        return features
+        # 去掉features 里的None
+        features = list(filter(None.__ne__, features))
+        self._ols_features = features
 
     # 用于单组内的OLS 回归设定，在在每组内apply
     def __each_group_ols_setting(self, targets: pd.DataFrame,

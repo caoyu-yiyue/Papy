@@ -148,7 +148,7 @@ class Test_objective(object):
         assert obj.targets.eq(
             proda.get_processed(which=ProcessedType.targets,
                                 from_dir='data/processed')).all()
-        assert obj.ols_features.dropna().eq(
+        assert obj.ols_features[0].dropna().eq(
             proda.get_processed(
                 which=ProcessedType.market_ret,
                 from_dir='data/processed/').dropna()).all().all()
@@ -184,6 +184,54 @@ class Test_objective(object):
         )
         obj = GroupedOLS(ols_features=fea, targets=tar, forward_window=5)
         obj.ols_in_group()
+
+
+class Test_obj_select_fea(object):
+    def test_every_olsFeatures(self):
+        """测试每一个OLSFeatures 传入时不会出现对象创建错误"""
+        for ols_fea in list(OLSFeatures):
+            GroupedOLS(processed_dir='data/processed/', ols_features=ols_fea)
+
+    def test_single_feature(self):
+        """测试获取一个单个的features"""
+        obj: GroupedOLS = GroupedOLS(processed_dir='data/processed/',
+                                     ols_features=OLSFeatures.rolling_std_log)
+        std_features = proda.get_processed(which=ProcessedType.rolling_std_log)
+        assert (obj.ols_features[0] == std_features).all()
+
+    def test_mutiple_features(self):
+        """测试获取两个main features"""
+        obj: GroupedOLS = GroupedOLS(processed_dir='data/processed/',
+                                     ols_features=OLSFeatures.std_amihud)
+        std_features = proda.get_processed(which=ProcessedType.rolling_std_log)
+        amihud = proda.get_processed(which=ProcessedType.amihud)
+        for idx, fea in enumerate([std_features, amihud]):
+            assert fea.eq(obj.ols_features[idx]).all()
+
+    def test_with_control(self):
+        """测试获取一种main 和一种control features"""
+        rm_features: pd.DataFrame = proda.get_processed(
+            ProcessedType.market_ret)
+        delta_std = proda.get_processed(ProcessedType.delta_std)
+        features = (delta_std, rm_features)
+        obj: GroupedOLS = GroupedOLS(processed_dir='data/processed/',
+                                     ols_features=OLSFeatures.delta_std_and_rm)
+        assert (
+            obj.ols_features[0].dropna() == features[0].dropna()).all().all()
+        assert (
+            obj.ols_features[1].dropna() == features[1].dropna()).all().all()
+
+    def test_with_dummy(self):
+        """测试获取一个main 和一个dummy 配合"""
+        std_features = proda.get_processed(ProcessedType.rolling_std_log)
+        ret_sign = proda.get_processed(ProcessedType.ret_sign)
+        std_with_sign = proda.features_mul_dummy(std_features, ret_sign)
+        features = (ret_sign, std_features, std_with_sign)
+
+        obj: GroupedOLS = GroupedOLS(processed_dir='data/processed/',
+                                     ols_features=OLSFeatures.std_with_sign)
+        for idx, fea in enumerate(features):
+            assert fea.eq(obj.ols_features[idx]).all()
 
 
 class Test_obj_look_detail(object):
