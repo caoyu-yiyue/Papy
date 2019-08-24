@@ -29,6 +29,12 @@ class OLSFeatures(Enum):
     delta_std_full_sign = 'delta_std_full_sign'
     delta_std_full_sign_rm = 'delta_std_full_sign_rm'
 
+    # 同时有vol 和liquid 的部分
+    std_amihud = 'std_amihud'
+    delta_std_full_amihud = 'delta_std_full_amihud'
+    std_amihud_sign = 'std_amihud_sign'
+    delta_std_full_amihud_sign = 'delta_std_full_amihud_sign'
+
 
 class GroupedOLS(object):
     _ols_dframe = None
@@ -213,6 +219,33 @@ class GroupedOLS(object):
             mkt_5day = self._get_proc_data(ProcessedType.market_ret)
             features = (ret_sign, delta_std_full, delta_full_with_sign,
                         mkt_5day)
+
+        elif features_type == OLSFeatures.std_amihud:
+            std_features = self._get_proc_data(ProcessedType.rolling_std_log)
+            amihud = self._get_proc_data(ProcessedType.amihud)
+            features = (std_features, amihud)
+        elif features_type == OLSFeatures.delta_std_full_amihud:
+            delta_std_full = self._get_proc_data(ProcessedType.delta_std_full)
+            amihud = self._get_proc_data(ProcessedType.amihud)
+            features = (delta_std_full, amihud)
+        elif features_type == OLSFeatures.std_amihud_sign:
+            ret_sign = self._get_proc_data(ProcessedType.ret_sign)
+            std_features = self._get_proc_data(ProcessedType.rolling_std_log)
+            amihud = self._get_proc_data(ProcessedType.amihud)
+            std_with_sign = proda.features_mul_dummy(std_features, ret_sign)
+            amihud_with_sign = proda.features_mul_dummy(amihud, ret_sign)
+            features = (ret_sign, std_features, std_with_sign, amihud,
+                        amihud_with_sign)
+        elif features_type == OLSFeatures.delta_std_full_amihud_sign:
+            delta_std_full = self._get_proc_data(ProcessedType.delta_std_full)
+            amihud = self._get_proc_data(ProcessedType.amihud)
+            ret_sign = self._get_proc_data(ProcessedType.ret_sign)
+            delta_std_full_with_sign = proda.features_mul_dummy(
+                delta_std_full, ret_sign)
+            amihud_with_sign = proda.features_mul_dummy(amihud, ret_sign)
+            features = (ret_sign, delta_std_full, delta_std_full_with_sign,
+                        amihud, amihud_with_sign)
+
         else:
             raise ValueError('Unknown features type passed.')
 

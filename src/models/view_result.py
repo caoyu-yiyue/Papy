@@ -2,8 +2,7 @@
 将该脚本在jupyter 环境中运行，传入processed 数据存储的位置，可以快速生成一个报告
 """
 # %%
-from src.models.grouped_ols import GroupedOLS
-from src.models.ols_model import OLSFeatures
+from src.models.grouped_ols import GroupedOLS, OLSFeatures
 from IPython.display import display, HTML
 import warnings
 import sys
@@ -17,6 +16,7 @@ if __name__ == "__main__":
 else:
     proc_data_in = 'data/processed/'
 
+# %%
 all_GroupedOLS_obj = dict.fromkeys([e.name for e in OLSFeatures])
 
 for fea_type in list(OLSFeatures):
@@ -80,3 +80,15 @@ t_test_multi_col(for_which=[
     'std_with_sign', 'delta_std_full_sign', 'delta_std_full_sign_rm'
 ],
                  cols=(2, 4))
+
+# %%
+# ## std_amihud, delta_std_full_amihud
+for fea in ['std_amihud', 'delta_std_full_amihud']:
+    t_test_single_col(for_which=[fea], col=1)
+    t_test_single_col(for_which=[fea], col=2)
+
+# %%
+# ## std_amihud_sign, delta_std_full_amihud_sign
+for fea in ['std_amihud_sign', 'delta_std_full_amihud_sign']:
+    t_test_multi_col(for_which=[fea], cols=(2, 4))
+    t_test_multi_col(for_which=[fea], cols=(4, 6))
