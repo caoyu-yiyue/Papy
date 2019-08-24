@@ -3,8 +3,7 @@ import pandas as pd
 from src.features import process_data_api as proda
 from src.features.process_data_api import ProcessedType
 from src.models import ols_model as olm
-from src.models.ols_model import OLSFeatures
-from src.models.grouped_ols import GroupedOLS
+from src.models.grouped_ols import OLSFeatures, GroupedOLS
 from statsmodels.regression.linear_model import RegressionResultsWrapper
 import re
 

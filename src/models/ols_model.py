@@ -4,29 +4,7 @@ import pandas as pd
 from src.features import process_data_api as proda
 import statsmodels.api as sm
 import click
-from enum import Enum
-
-
-class OLSFeatures(Enum):
-    """
-    用于枚举回归feature 类型的Enum
-    """
-    # 原论文中的部分
-    market_ret = 'mkt'
-    rolling_std_log = 'std'
-    delta_std = 'delta_std'
-    delta_std_and_rm = 'delta_std_rm'
-
-    # 新增加的部分
-    delta_std_full = 'delta_std_full'
-    delta_std_full_rm = 'delta_std_full_rm'
-    amihud = 'amihud'
-    turnover = 'turnover'
-
-    # 加上sign 的部分
-    std_with_sign = 'std_with_sign'
-    delta_std_full_sign = 'delta_std_full_sign'
-    delta_std_full_sign_rm = 'delta_std_full_sign_rm'
+from grouped_ols import OLSFeatures
 
 
 def select_features(features_type: OLSFeatures):
