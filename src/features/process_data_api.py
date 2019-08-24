@@ -96,7 +96,7 @@ def calculate_turnover(backward_window, forward_window):
         forward_method=sum,
         col_for_backward_looking='log_ret',
         col_for_forward_looking='turnOver',
-        average_in='reverse_group')
+        average_in='reverse_group').rename('turnover')
 
     return rev_port_turnover
 
