@@ -4,7 +4,7 @@ import pandas as pd
 from src.features import process_data_api as proda
 import statsmodels.api as sm
 import click
-from grouped_ols import OLSFeatures
+from src.models.grouped_ols import OLSFeatures
 
 
 def select_features(features_type: OLSFeatures):
