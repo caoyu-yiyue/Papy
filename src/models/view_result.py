@@ -26,7 +26,7 @@ for fea_type in list(OLSFeatures):
 
 # %%
 # 直接查看结果的函数
-def t_test_single_col(for_which, col):
+def t_test_single_col(for_which, col, param=False):
     """
     查看某一列的系数与t 值
     """
@@ -38,8 +38,10 @@ def t_test_single_col(for_which, col):
         elif isinstance(col, int):
             fea_name = obj.look_up_ols_detail(detail='params_name')
             msg_col = fea_name[col]
-        display(key + ': ' + "param for '{}'".format(msg_col))
-        display(obj.look_up_ols_detail(detail='param', column=col))
+
+        if param:
+            display(key + ': ' + "param for '{}'".format(msg_col))
+            display(obj.look_up_ols_detail(detail='param', column=col))
 
         display(key + ': ' + "t_value for '{}'".format(msg_col))
         display(obj.look_up_ols_detail(detail='t_test_star', column=col))
@@ -61,7 +63,7 @@ def t_test_multi_col(for_which, cols):
 
 # %% [markdown]
 # ## rm and rolling_std_log
-t_test_single_col(for_which=['market_ret'], col='const')
+t_test_single_col(for_which=['market_ret'], col='const', param=True)
 
 # %% [markdown]
 # ## rolling_std_log
@@ -88,7 +90,11 @@ for fea in ['std_amihud', 'delta_std_full_amihud']:
     t_test_single_col(for_which=[fea], col=2)
 
 # %%
-# ## std_amihud_sign, delta_std_full_amihud_sign
-for fea in ['std_amihud_sign', 'delta_std_full_amihud_sign']:
+# ## std_amihud_sign, delta_std_full_amihud_sign, and those with rm or 3f
+for fea in [
+        'std_amihud_sign', 'std_amihud_sign_rm', 'std_amihud_sign_3f',
+        'delta_std_full_amihud_sign', 'delta_std_full_amihud_sign_rm',
+        'delta_std_full_amihud_sign_3f'
+]:
     t_test_multi_col(for_which=[fea], cols=(2, 4))
     t_test_multi_col(for_which=[fea], cols=(4, 6))

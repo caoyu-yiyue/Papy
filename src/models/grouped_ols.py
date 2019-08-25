@@ -32,9 +32,14 @@ class OLSFeatures(Enum):
 
     # 同时有vol 和liquid 的部分
     std_amihud = 'rolling_std_log&amihud'
-    delta_std_full_amihud = 'delta_std_full&amihud'
     std_amihud_sign = 'rolling_std_log&amihud/ret_sign'
+    std_amihud_sign_rm = 'rolling_std_log&amihud/ret_sign/market_ret'
+    std_amihud_sign_3f = 'rolling_std_log&amihud/ret_sign/three_fac'
+
+    delta_std_full_amihud = 'delta_std_full&amihud'
     delta_std_full_amihud_sign = 'delta_std_full&amihud/ret_sign'
+    delta_std_full_amihud_sign_rm = 'delta_std_full&amihud/ret_sign/market_ret'
+    delta_std_full_amihud_sign_3f = 'delta_std_full&amihud/ret_sign/three_fac'
 
 
 class GroupedOLS(object):
