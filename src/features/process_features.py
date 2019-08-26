@@ -46,7 +46,7 @@ def main(which, windows, input_file, output_file):
             col_name_prefix='delta_std',
             leading_time=forward)
         std_features['rolling_std_log'] = rolling_std_log
-        std_features['delta_std_full'] = delta_std_forward
+        std_features['delta_std_full'] = delta_std_forward.shift(-forward)
         features_df: pd.DataFrame = std_features
     elif which == 'turnover_features':
         # 计算组合的turnover，依赖向前和向后的窗口长度
