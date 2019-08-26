@@ -27,6 +27,8 @@ class OLSFeatures(Enum):
 
     # 加上sign 的部分
     std_with_sign = 'rolling_std_log/ret_sign'
+    amihud_with_sign = 'amihud/ret_sign'
+    turnover_with_sign = 'turnover/ret_sign'
     delta_std_full_sign = 'delta_std_full/ret_sign'
     delta_std_full_sign_rm = 'delta_std_full/ret_sign/market_ret'
 

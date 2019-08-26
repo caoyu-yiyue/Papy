@@ -85,14 +85,16 @@ display(Markdown('***'))
 # ### sign = 0
 display(HTML('<h3>sign = 0</h3>'))
 t_test_single_col(for_which=[
-    'std_with_sign', 'delta_std_full_sign', 'delta_std_full_sign_rm'
+    'std_with_sign', 'amihud_with_sign', 'turnover_with_sign',
+    'delta_std_full_sign', 'delta_std_full_sign_rm'
 ],
                   col=2)
 
 # ### sign = 1
 display(HTML('<h3>sign = 1</h3>'))
 t_test_multi_col(for_which=[
-    'std_with_sign', 'delta_std_full_sign', 'delta_std_full_sign_rm'
+    'std_with_sign', 'amihud_with_sign', 'turnover_with_sign',
+    'delta_std_full_sign', 'delta_std_full_sign_rm'
 ],
                  cols=(2, 4))
 
