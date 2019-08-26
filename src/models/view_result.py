@@ -3,7 +3,7 @@
 """
 # %%
 from src.models.grouped_ols import GroupedOLS, OLSFeatures
-from IPython.display import display, HTML
+from IPython.display import display, HTML, Markdown
 import warnings
 import sys
 
@@ -76,12 +76,27 @@ t_test_multi_col(for_which=['delta_std', 'delta_std_and_rm'], cols=(1, 6))
 # ## delta_std_full and with rm
 t_test_single_col(for_which=['delta_std_full', 'delta_std_full_rm'], col=1)
 
+display(Markdown('***'))
+
 # %% [markdown]
 # ## std_with_sign, delta_std_full_sign, delta_std_full_sign_rm
+
+# %% [markdown]
+# ### sign = 0
+display(HTML('<h3>sign = 0</h3>'))
+t_test_single_col(for_which=[
+    'std_with_sign', 'delta_std_full_sign', 'delta_std_full_sign_rm'
+],
+                  col=2)
+
+# ### sign = 1
+display(HTML('<h3>sign = 1</h3>'))
 t_test_multi_col(for_which=[
     'std_with_sign', 'delta_std_full_sign', 'delta_std_full_sign_rm'
 ],
                  cols=(2, 4))
+
+display(Markdown('***'))
 
 # %%
 # ## std_amihud, delta_std_full_amihud
@@ -91,10 +106,15 @@ for fea in ['std_amihud', 'delta_std_full_amihud']:
 
 # %%
 # ## std_amihud_sign, delta_std_full_amihud_sign, and those with rm or 3f
+
+display(HTML('<h2>All in with Sign</h2>'))
+
 for fea in [
         'std_amihud_sign', 'std_amihud_sign_rm', 'std_amihud_sign_3f',
         'delta_std_full_amihud_sign', 'delta_std_full_amihud_sign_rm',
         'delta_std_full_amihud_sign_3f'
 ]:
-    t_test_multi_col(for_which=[fea], cols=(2, 4))
+    t_test_single_col(for_which=[fea], col=4)
     t_test_multi_col(for_which=[fea], cols=(4, 6))
+    t_test_single_col(for_which=[fea], col=2)
+    t_test_multi_col(for_which=[fea], cols=(2, 4))
