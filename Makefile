@@ -132,3 +132,9 @@ rob_test: $(rob_dir) $(rob_dir)/targets.pickle $(rob_features)
 robost: data/interim/prepared_data.pickle
 	$(MAKE) rob_test backward=40 forward=5 &
 	$(MAKE) rob_test backward=20 forward=5 &
+	$(MAKE) rob_test backward=60 forward=10 &
+	$(MAKE) rob_test backward=40 forward=10 &
+	$(MAKE) rob_test backward=20 forward=10 &
+	$(MAKE) rob_test backward=60 forward=20 &
+	$(MAKE) rob_test backward=40 forward=20 &
+	$(MAKE) rob_test backward=20 forward=20 &
