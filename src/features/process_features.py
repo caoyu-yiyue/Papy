@@ -59,7 +59,12 @@ def main(which, windows, input_file, output_file):
         amihud_backward, amihud_forward = proda.calculate_amihud(
             backward, forward)
         features_df = pd.concat([amihud_backward, amihud_forward], axis=1)
-        features_df: pd.Series = features_df.reindex(year_index, level='Trddt')
+        features_df: pd.DataFrame = features_df.reindex(
+            year_index, level='Trddt').reindex(
+                ['Small', '2', '3', '4', 'Big'],
+                level=1).reindex(['Lo-Hi', '2-9', '3-8', '4-7', '5-6'],
+                                 level=2)
+
     elif which == 'ret_sign_features':
         # 计算表示组合收益正负的虚拟变量
         features_df: pd.Series = proda.calculate_ret_sign(reverse_ret_dframe)
