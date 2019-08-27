@@ -56,9 +56,10 @@ def main(which, windows, input_file, output_file):
                                                          level='Trddt')
     elif which == 'amihud_features':
         # 计算组合的Amihud 指标，依赖向前和向后的窗口长度
-        amihud_series: pd.Series = proda.calculate_amihud(backward, forward)
-        features_df: pd.Series = amihud_series.reindex(year_index,
-                                                       level='Trddt')
+        amihud_backward, amihud_forward = proda.calculate_amihud(
+            backward, forward)
+        features_df = pd.concat([amihud_backward, amihud_forward], axis=1)
+        features_df: pd.Series = features_df.reindex(year_index, level='Trddt')
     elif which == 'ret_sign_features':
         # 计算表示组合收益正负的虚拟变量
         features_df: pd.Series = proda.calculate_ret_sign(reverse_ret_dframe)

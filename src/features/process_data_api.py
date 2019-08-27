@@ -107,7 +107,7 @@ def calculate_amihud(backward_window, forward_window):
 
     Return:
     -------
-        pd.Series
+        list, 两个结果分别为amihud_backward 和amihud_forward，排序期和持有期平均的组合amihud
     """
     # 计算amihud 指标的主函数
     prepared_data: pd.DataFrame = predata.read_prepared_data()
@@ -159,22 +159,31 @@ def calculate_amihud(backward_window, forward_window):
         prepared_data,
         groupby_columns=['Trddt', 'cap_group', 'rev_group'],
         calcu_column='amihud',
-        weights_column='dollar_volume_today')
+        weights_column='dollar_volume_today').rename('amihud')
 
     # %%
-    # 在未来五天内进行平均，得到最终的Amihud 指标
-    rev_port_amihud.name = 'amihud'
-    amihud_time_ave: pd.Series = rpt.forward_rolling_apply(
+    # 在未来五天内进行平均，得到未来（持有期）的Amihud 指标
+    amihud_forward_time_ave: pd.Series = rpt.forward_rolling_apply(
         df=rev_port_amihud.to_frame(),
         window=forward_window,
         method=np.average,
         groupby_column=['cap_group', 'rev_group'],
-        calcu_column='amihud')
-    amihud_time_ave.dropna(inplace=True)
+        calcu_column='amihud').rename('amihud_forward').dropna()
+
+    # 在排序期内平均，得到过去（排序期）的Amihud 指标
+    amihud_backward_time_ave: pd.Series = rpt.backward_rolling_apply(
+        df=rev_port_amihud.to_frame(),
+        window=backward_window,
+        method=np.average,
+        groupby_column=['cap_group', 'rev_group'],
+        calcu_column='amihud').rename('amihud_backward').dropna()
 
     # 更改index 顺序
-    amihud_reindex: pd.Series = amihud_time_ave.reindex(
-        ['Lo-Hi', '2-9', '3-8', '4-7', '5-6'], level=2)
+    amihud_reindex = [
+        amihud_time_ave.reindex(['Lo-Hi', '2-9', '3-8', '4-7', '5-6'], level=2)
+        for amihud_time_ave in
+        [amihud_backward_time_ave, amihud_forward_time_ave]
+    ]
 
     return amihud_reindex
 
@@ -277,7 +286,8 @@ class ProcessedType(Enum):
     delta_std = 'std_features'
     delta_std_full = 'std_features'
     turnover = 'turnover_features'
-    amihud = 'amihud_features'
+    amihud_back = 'amihud_features'
+    amihud_for = 'amihud_features'
     ret_sign = 'ret_sign_features'
     three_fac = '3_fac_features'
 
@@ -307,7 +317,8 @@ def get_processed(which: ProcessedType, from_dir: str = 'data/processed/'):
     feature_frame = pd.read_pickle(feature_path)
 
     # 同框保存了多种数据，按照col name 读取相应列
-    if which in (ProcessedType.rolling_std_log, ProcessedType.delta_std_full):
+    if which in (ProcessedType.rolling_std_log, ProcessedType.delta_std_full,
+                 ProcessedType.amihud_back, ProcessedType.amihud_for):
         return feature_frame[which.name]
     # 同框保存了多种数据，需要的数据为多列时
     elif which == ProcessedType.delta_std:
