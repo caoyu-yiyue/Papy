@@ -73,8 +73,12 @@ t_test_single_col(for_which=['rolling_std_log'], col='rolling_std_log')
 t_test_multi_col(for_which=['delta_std', 'delta_std_and_rm'], cols=(1, 6))
 
 # %% [markdown]
-# ## delta_std_full and with rm
-t_test_single_col(for_which=['delta_std_full', 'delta_std_full_rm'], col=1)
+# ## delta_std_full and with rm, amihud_back and amihud_for, turnover
+t_test_single_col(for_which=[
+    'delta_std_full', 'delta_std_full_rm', 'amihud_back', 'amihud_for',
+    'turnover'
+],
+                  col=1)
 
 display(Markdown('***'))
 
