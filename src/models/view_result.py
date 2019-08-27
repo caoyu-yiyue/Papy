@@ -79,42 +79,28 @@ t_test_single_col(for_which=['delta_std_full', 'delta_std_full_rm'], col=1)
 display(Markdown('***'))
 
 # %% [markdown]
-# ## std_with_sign, delta_std_full_sign, delta_std_full_sign_rm
+# ## std_with_sign, amihudBack_with_sign, turnover_with_sign
 
-# %% [markdown]
-# ### sign = 0
-display(HTML('<h3>sign = 0</h3>'))
-t_test_single_col(for_which=[
-    'std_with_sign', 'amihud_with_sign', 'turnover_with_sign',
-    'delta_std_full_sign', 'delta_std_full_sign_rm'
-],
-                  col=2)
-
-# ### sign = 1
-display(HTML('<h3>sign = 1</h3>'))
-t_test_multi_col(for_which=[
-    'std_with_sign', 'amihud_with_sign', 'turnover_with_sign',
-    'delta_std_full_sign', 'delta_std_full_sign_rm'
-],
-                 cols=(2, 4))
+for fea in ['std_with_sign', 'amihudBack_with_sign', 'turnover_with_sign']:
+    t_test_single_col(for_which=[fea], col=2)
+    t_test_multi_col(for_which=[fea], cols=(2, 4))
 
 display(Markdown('***'))
 
 # %%
-# ## std_amihud, delta_std_full_amihud
-for fea in ['std_amihud', 'delta_std_full_amihud']:
+# ## std_amihudBack
+for fea in ['std_amihudBack']:
     t_test_single_col(for_which=[fea], col=1)
     t_test_single_col(for_which=[fea], col=2)
 
 # %%
-# ## std_amihud_sign, delta_std_full_amihud_sign, and those with rm or 3f
+# ## std_amihudBack_sign, and with rm or 3f
 
 display(HTML('<h2>All in with Sign</h2>'))
 
 for fea in [
-        'std_amihud_sign', 'std_amihud_sign_rm', 'std_amihud_sign_3f',
-        'delta_std_full_amihud_sign', 'delta_std_full_amihud_sign_rm',
-        'delta_std_full_amihud_sign_3f'
+        'std_amihudBack_sign', 'std_amihudBack_sign_rm',
+        'std_amihudBack_sign_3f'
 ]:
     t_test_single_col(for_which=[fea], col=4)
     t_test_multi_col(for_which=[fea], cols=(4, 6))

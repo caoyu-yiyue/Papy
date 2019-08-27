@@ -22,26 +22,22 @@ class OLSFeatures(Enum):
     # 新增加的部分
     delta_std_full = 'delta_std_full'
     delta_std_full_rm = 'delta_std_full//market_ret'
-    amihud = 'amihud'
+    amihud_back = 'amihud_back'
+    amihud_for = 'amihud_for'
     turnover = 'turnover'
 
     # 加上sign 的部分
     std_with_sign = 'rolling_std_log/ret_sign'
-    amihud_with_sign = 'amihud/ret_sign'
+    amihudBack_with_sign = 'amihud_back/ret_sign'
     turnover_with_sign = 'turnover/ret_sign'
-    delta_std_full_sign = 'delta_std_full/ret_sign'
-    delta_std_full_sign_rm = 'delta_std_full/ret_sign/market_ret'
+    # delta_std_full_sign = 'delta_std_full/ret_sign'
+    # delta_std_full_sign_rm = 'delta_std_full/ret_sign/market_ret'
 
     # 同时有vol 和liquid 的部分
-    std_amihud = 'rolling_std_log&amihud'
-    std_amihud_sign = 'rolling_std_log&amihud/ret_sign'
-    std_amihud_sign_rm = 'rolling_std_log&amihud/ret_sign/market_ret'
-    std_amihud_sign_3f = 'rolling_std_log&amihud/ret_sign/three_fac'
-
-    delta_std_full_amihud = 'delta_std_full&amihud'
-    delta_std_full_amihud_sign = 'delta_std_full&amihud/ret_sign'
-    delta_std_full_amihud_sign_rm = 'delta_std_full&amihud/ret_sign/market_ret'
-    delta_std_full_amihud_sign_3f = 'delta_std_full&amihud/ret_sign/three_fac'
+    std_amihudBack = 'rolling_std_log&amihud_back'
+    std_amihudBack_sign = 'rolling_std_log&amihud_back/ret_sign'
+    std_amihudBack_sign_rm = 'rolling_std_log&amihud_back/ret_sign/market_ret'
+    std_amihudBack_sign_3f = 'rolling_std_log&amihud_back/ret_sign/three_fac'
 
 
 class GroupedOLS(object):
