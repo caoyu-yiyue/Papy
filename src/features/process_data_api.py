@@ -168,7 +168,8 @@ def calculate_amihud(backward_window, forward_window):
         window=forward_window,
         method=np.average,
         groupby_column=['cap_group', 'rev_group'],
-        calcu_column='amihud').rename('amihud_for').dropna()
+        calcu_column='amihud',
+        shift=1).rename('amihud_for').dropna()
 
     # 在排序期内平均，得到过去（排序期）的Amihud 指标
     amihud_backward_time_ave: pd.Series = rpt.backward_rolling_apply(
