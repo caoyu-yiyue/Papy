@@ -1,16 +1,19 @@
 # set .PHONY
-.PHONY: all all_from_h5 all_verbose clean clean_targets clean_features\
+.PHONY: all all_from_h5 all_from_h5_verbose all_verbose clean clean_targets clean_features\
 clean_models clean_all features ols_models robost
 
-# 从raw_data.h5 开始build，但不包括ols 拟合的结果
+# 从raw_data.h5 开始build，但不包括稳健型检验数据
 all_from_h5: data/interim/prepared_data.pickle data/interim/reverse_port_ret.pickle\
-data/processed/targets.pickle features robost
+data/processed/targets.pickle features ols_models
+
+# 从h5 开始，拟合ols 结果后，计算robost 数据（耗时）
+all_from_h5_verbose: all_from_h5 robost
 
 # 所有的文件，但不包括ols 拟合的结果
 all: data/raw/raw_data.h5 all_from_h5
 
 # 包括raw_data.h5 和ols 拟合结果在内的全部文件
-all_verbose: data/raw/raw_data.h5 all_from_h5 ols_model
+all_verbose: data/raw/raw_data.h5 all_from_h5_verbose
 
 # ====================================== clean =============================================== #
 # clean models' targets
