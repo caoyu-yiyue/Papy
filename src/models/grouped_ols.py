@@ -30,8 +30,8 @@ class OLSFeatures(Enum):
     std_with_sign = 'rolling_std_log/ret_sign'
     amihudBack_with_sign = 'amihud_back/ret_sign'
     turnover_with_sign = 'turnover/ret_sign'
-    # delta_std_full_sign = 'delta_std_full/ret_sign'
-    # delta_std_full_sign_rm = 'delta_std_full/ret_sign/market_ret'
+    delta_std_full_sign = 'delta_std_full/ret_sign'
+    delta_std_full_sign_rm = 'delta_std_full/ret_sign/market_ret'
 
     # 同时有vol 和liquid 的部分
     std_amihudBack = 'rolling_std_log&amihud_back'

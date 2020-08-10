@@ -41,12 +41,12 @@ def select_features(features_type: OLSFeatures):
         rm_features = proda.get_rm_features()
         delta_full = proda.get_delta_std_forward_interval()
         features = (delta_full, rm_features)
-    elif features_type == OLSFeatures.amihud:
-        # 返回amihud 值
-        features = proda.get_amihud_features()
-    elif features_type == OLSFeatures.turnover:
-        # 返回turnover 值
-        features = proda.get_turnover_features()
+    # elif features_type == OLSFeatures.amihud:
+         # 返回amihud 值
+    #     features = proda.get_amihud_features()
+    # elif features_type == OLSFeatures.turnover:
+         # 返回turnover 值
+    #     features = proda.get_turnover_features()
 
     elif features_type == OLSFeatures.std_with_sign:
         # 返回波动率(std)、组合收益率虚拟变量、及二者交互项
@@ -387,7 +387,7 @@ def ols_quick(features_type: OLSFeatures, targets=None):
 
 @click.command()
 @click.option('--featurestype',
-              type=click.Choice([e.value for e in OLSFeatures]),
+              type=click.Choice([e.name for e in OLSFeatures]),
               help='select the features\' type being to use')
 @click.argument('output_file', type=click.Path(writable=True))
 def main(featurestype, output_file):
@@ -403,7 +403,8 @@ def main(featurestype, output_file):
     """
 
     # 使用ols_quick 进行回归。
-    ols_results_series = ols_quick(features_type=OLSFeatures(featurestype))
+    ols_results_series = ols_quick(
+        features_type=getattr(OLSFeatures, featurestype))
 
     # 保存结果
     ols_results_series.to_pickle(output_file)

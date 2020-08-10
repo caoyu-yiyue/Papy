@@ -71,11 +71,11 @@ features: $(features_target)
 # contruct ols models data frame
 # 1. ols with market excess return
 models/ols_on_mkt.pickle: data/processed/rm_features.pickle data/processed/targets.pickle
-	python3 src/models/ols_model.py --featurestype mkt $@
+	python3 src/models/ols_model.py --featurestype market_ret $@
 
 # 2. ols with rolling std log
 models/ols_on_std.pickle: data/processed/std_features.pickle data/processed/targets.pickle
-	python3 src/models/ols_model.py --featurestype std $@
+	python3 src/models/ols_model.py --featurestype rolling_std_log $@
 
 # 3. ols with delta_std
 models/ols_on_delta_std.pickle: data/processed/std_features.pickle data/processed/targets.pickle
@@ -83,7 +83,7 @@ models/ols_on_delta_std.pickle: data/processed/std_features.pickle data/processe
 
 # 4. ols with delta_std and market return
 models/ols_on_delta_std_rm.pickle: data/processed/std_features.pickle data/processed/targets.pickle
-	python3 src/models/ols_model.py --featurestype delta_std_rm $@
+	python3 src/models/ols_model.py --featurestype delta_std_and_rm $@
 
 # 5. ols on delta std in full forward interval
 models/ols_on_delta_std_full.pickle: data/processed/std_features.pickle data/processed/targets.pickle
