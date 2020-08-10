@@ -130,6 +130,13 @@ src/ 文件夹保存了处理数据所用的Python 源代码，用于作为modul
   * `view_result.py`：一键查看所有 OLS 结果。调用对象化的新接口，传入 target 和 features 的数据存储路径，一键输出一个 notebook 查看所有 features 组合的 OLS 结果。(本质上并非 build 流程的一部分，但方便直接生成报告)
 * `visualization`：用于进行一些可视化操作的脚本目前为空。
 
+## test/
+
+对代码进行的测试，使用pytest。
+
+* `features_tests.py`：构建 features 时的测试，包括feature 计算是否正确、一些功能函数是否符合预期等。
+* `ols_test.py`：测试进行分组 OLS 的相关代码。包括对象构建、获取features、拟合、读取、查看结果等部分。
+
 ## notebooks/
 
 用于探索数据和生成报告的Jupyter notebooks
