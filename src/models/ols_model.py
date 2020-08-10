@@ -42,10 +42,10 @@ def select_features(features_type: OLSFeatures):
         delta_full = proda.get_delta_std_forward_interval()
         features = (delta_full, rm_features)
     # elif features_type == OLSFeatures.amihud:
-         # 返回amihud 值
+        #   返回amihud 值
     #     features = proda.get_amihud_features()
     # elif features_type == OLSFeatures.turnover:
-         # 返回turnover 值
+        #   返回turnover 值
     #     features = proda.get_turnover_features()
 
     elif features_type == OLSFeatures.std_with_sign:
