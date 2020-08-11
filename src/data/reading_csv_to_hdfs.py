@@ -4,7 +4,7 @@
 import glob
 import pandas as pd
 
-data_root_folder = '/Users/caoyue/Codes/R/Paper_test/Data/rawData/'
+data_root_folder = 'data/rawData/'
 # %% search for the file list for Daily return and read to data frame.
 file_list = glob.glob(data_root_folder + 'TRD_Dalyr*.csv')
 for index, file in enumerate(file_list):
