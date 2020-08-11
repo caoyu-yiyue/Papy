@@ -21,23 +21,23 @@ Papy is just Paper Python. 因为前面还有一个 R 版本233。
 
 ## 使用方法
 
-一键计算所有数据：
+1. 一键计算所有数据：
 
-```shell
-make all
-```
+    ```shell
+    make all
+    ```
 
-但如上方法不计算稳健型检验所需数据。稳健型检验时，使用不同的反转组合的backword 和forward 窗口长度，计算将会比较耗时。使用如下命令计算稳健型检验所需数据：
+    但如上方法不计算稳健型检验所需数据。稳健型检验时，使用不同的反转组合的backword 和forward 窗口长度，计算将会比较耗时。使用如下命令计算稳健型检验所需数据：
 
-```shell
-make all_verbose
-```
+    ```shell
+    make all_verbose
+    ```
 
-一键生成报告：
+2. 一键生成报告：
 
-在（VSCode 的）jupyter 环境下运行脚本 `src/model/view_result.py`，需要一个参数，即保存一组回归 target&features 数据的路径。可以是主流程中的数据路径或一组稳健型检验的数据所在路径。输出一个 jupyter 文件，包括了 `OLSFeatures` 类下所有的 features 组合的回归结果。
+    在（VSCode 的）jupyter 环境下运行脚本 `src/model/view_result.py`，需要一个参数，即保存一组回归 target&features 数据的路径。可以是主流程中的数据路径或一组稳健型检验的数据所在路径。输出一个 jupyter 文件，包括了 `OLSFeatures` 类下所有的 features 组合的回归结果。
 
-扩展：可以在目前的基础上计算更多的 features、自动组合、直接计算新 OLS。(对于非本任务下的通用情况，有一些hard code 的部分，如行名列名等，可能需要修改)
+3. 扩展：可以在目前的基础上计算更多的 features、自动组合、直接计算新 OLS。(对于非本任务下的通用情况，有一些hard code 的部分，如行名列名等，可能需要修改)
 
 ## 其他注意事项
 
