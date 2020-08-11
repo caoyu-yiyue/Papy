@@ -17,7 +17,7 @@ Papy is just Paper Python. 因为前面还有一个 R 版本233。
 1. 使用 numba 加速 rolling 计算反转组合收益的过程；
 2. 统一接口计算不同的回归 features(X)；
 3. 对象化的分组回归接口，同时兼容分组 features 和各组相同的 features；
-4. 自由指定不同的主要自变量、Dummy 自变量、控制变量，按照参数命名规则输入不同的 features，自动组合并可以完成新的回归模型。(配置在 src/models/grouped_ols.py 中的 OLSFeatures Enum 中实现。)
+4. 自由指定不同的主要自变量、Dummy 自变量、控制变量，按照参数命名规则输入不同的 features，自动组合并可以完成新的回归模型。(配置在 `src/models/grouped_ols.py` 中的 Enum `OLSFeatures` 中实现。)
 
 ## 使用方法
 
@@ -35,12 +35,12 @@ make all_verbose
 
 一键生成报告：
 
-在（VSCode 的）jupyter 环境下运行脚本 `src/model/view_result.py`，需要一个参数，即保存一组回归 target&features 数据的路径。可以是主流程中的数据路径或一组稳健型检验的数据所在路径。输出一个 jupyter 文件，包括了 OLSFeatures 类下所有的 features 组合的回归结果。
+在（VSCode 的）jupyter 环境下运行脚本 `src/model/view_result.py`，需要一个参数，即保存一组回归 target&features 数据的路径。可以是主流程中的数据路径或一组稳健型检验的数据所在路径。输出一个 jupyter 文件，包括了 `OLSFeatures` 类下所有的 features 组合的回归结果。
 
 扩展：可以在目前的基础上计算更多的 features、自动组合、直接计算新 OLS。(对于非本任务下的通用情况，有一些hard code 的部分，如行名列名等，可能需要修改)
 
 ## 其他注意事项
 
-新的对象化 GroupedOLS 接口还未加入 makefile 指定的 pipline 中，不过组件还算独立，可以单独使用（实际上自动生成报告时已经使用了新的接口，只是还没有整合到 pipline）。
+新的对象化 `GroupedOLS` 接口还未加入 makefile 指定的 pipline 中，不过组件还算独立，可以单独使用（实际上自动生成报告时已经使用了新的接口，只是还没有整合到 pipline）。
 
 在 VSCode 中运行可以最大程度保证配置完备。
