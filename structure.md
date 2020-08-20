@@ -108,8 +108,8 @@ data 文件夹用来存储各种数据，目前包括：
 
 * mkt 市场收益
 * std 标准差
-* delta_std 每日标准差差值
-* delta_std_full 整个样本期间的标准差差值
+* delta_std 反转组合持有期期间，每日的标准差差值
+* delta_std_full 反转组合持有期期间，整体的标准差差值
 * sign 表示收益率正负Dummy。
 
 ## src/
