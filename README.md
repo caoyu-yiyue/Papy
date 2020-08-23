@@ -37,7 +37,7 @@ Papy is just Paper Python. 因为前面还有一个 R 版本233。
 
 2. 一键生成报告：
 
-    在（VSCode 的）jupyter 环境下运行脚本 `src/model/view_result.py`，需要一个参数，即保存一组回归 target&features 数据的路径。可以是主流程中的数据路径或一组稳健型检验的数据所在路径。输出一个 jupyter 文件，包括了 `OLSFeatures` 类下所有的 features 组合的回归结果。
+    在（VSCode 的）jupyter 环境下运行脚本 `src/model/view_result.py`，需要一个参数，即保存一组回归 target&features 数据的路径。可以是主流程中的数据路径或一组稳健型检验的数据所在路径。输出一个 jupyter 文件，包括了 `OLSFeatures` 类下所有的 features 组合的回归结果。(不过并不是生成最终报告或是论文哦，是用于检查所有主要结果显著性的表格。）
 
 3. 扩展：可以在目前的基础上计算更多的 features、自动组合、直接计算新 OLS。(对于非本任务下的通用情况，有一些hard code 的部分，如行名列名等，可能需要修改)
 
