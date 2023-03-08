@@ -10,7 +10,7 @@ For project structure in Chinese, see [structure.md](structure.md).
 
 Frankly speaking, it models the relationship of the return of reversal portfolios with liquidity and/or volatility. We calculated the return of the reversal portfolios, by first splitting the stocks into 5 groups by their size, and then splitting every group into 10 sub-groups by their historical rolling standardized return, finally subtracting the high from the low. We can then get the 5*5 reversal portfolios, and model them using OLS with different indices of liquidity and volatility.
 
-Generally, it's a grouping regression problem. The dependent variable needs to be split into groups (5*5 here), and the independent variable may be split or not. And we also need to calculate different types of features, like dummy variables, and control variables. We dummy variables are in the regression, we also need to construct cross features with the main feature.
+Generally, it's a grouping regression problem. The dependent variable needs to be split into groups (5*5 here), and the independent variable may be split or not. And we also need to calculate different types of features, like dummy variables, and control variables. When dummy variables are in the regression, we also need to construct cross features with the main feature.
 
 It's easy to calculate the data we need, but I want to automate the workflow and write a general framework for the same kind of problem. As the result, we can run the whole project with one line in CLI.
 
@@ -29,14 +29,14 @@ Here're the main functionalities:
     make all
     ```
     
-    But it doesn't generate the result of the robust tests. We set different backward and forward window lengths of reversal portfolios in robust tests, and it's time costing. Using the following command for robust test results.
+    But it doesn't generate the result of the robust tests. We set different backward and forward window lengths of reversal portfolios in robust tests, and it's time costing. Using the following command for all calculation with robust test results.
     
     ```shell
     make all_verbose
     ```
 2. Automated quick report generating 
     
-    Run the script `src/model/view_result.py` in the Jupyter environment (of VSCode), and pass a parameter of the path of data of a group of target&features. It will generate a jupyter notebook file which includes all regression results configured in `OLSFeatures`.
+    Run the script `src/model/view_result.py` in the Jupyter environment (of VSCode maybe), and pass a parameter of the path of data of a group of target&features. It will generate a jupyter notebook file which includes all regression results configured in `OLSFeatures`.
  
  3. It can also be used to calculate more features, automated combinations, and new OLS models. (For more general tasks, there may be some hard codes like row or column names to refactor)
 
